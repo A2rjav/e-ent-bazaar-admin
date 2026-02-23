@@ -1,0 +1,927 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Manufacturer {
+  id                                        String                                      @id(map: "customers_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                      String
+  email                                     String                                      @unique(map: "customers_email_key")
+  phone                                     String
+  company_name                              String                                      @map("company_name")
+  state                                     String
+  district                                  String
+  kiln_type                                 String                                      @map("kiln_type")
+  additional_info                           String?                                     @map("additional_info")
+  interested_in_exclusive_services          Boolean?                                    @default(false) @map("interested_in_exclusive_services")
+  joined_date                               DateTime?                                   @default(now()) @map("joined_date") @db.Timestamptz(6)
+  is_test_entry                             Boolean?                                    @default(false) @map("is_test_entry")
+  created_at                                DateTime?                                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  status                                    String                                      @default("waitlist")
+  city                                      String?
+  country                                   String?                                     @default("India")
+  biz_gst                                   String?                                     @map("biz_gst")
+  exim_code                                 String?                                     @map("exim_code")
+  pan_no                                    String?                                     @map("pan_no")
+  pincode                                   String?
+  interested_in_industry_quiz               Boolean?                                    @default(false) @map("interested_in_industry_quiz")
+  updated_at                                DateTime?                                   @default(now()) @map("updated_at") @db.Timestamptz(6)
+  latitude                                  Float?
+  longitude                                 Float?
+  category                                  String?                                     @default("manufacturer")
+  is_featured                               Boolean                                     @default(false) @map("is_featured")
+  is_verified                               Boolean                                     @default(false) @map("is_verified")
+  country_code                              String?                                     @default("+91") @map("country_code")
+  coal_provider_manufacturer_inquiries      coal_provider_manufacturer_inquiries[]
+  coal_provider_manufacturer_ratings        coal_provider_manufacturer_ratings[]
+  inquiries                                 inquiries[]
+  inquiry_response_history                  inquiry_response_history[]
+  manufacturer_coal_inquiries               manufacturer_coal_inquiries[]
+  manufacturer_coal_orders                  manufacturer_coal_orders[]
+  manufacturer_coal_quotations              manufacturer_coal_quotations[]
+  manufacturer_coal_ratings                 manufacturer_coal_ratings[]
+  manufacturer_transport_inquiries          manufacturer_transport_inquiries[]
+  manufacturer_transport_orders             manufacturer_transport_orders[]
+  manufacturer_transport_quotations         manufacturer_transport_quotations[]
+  manufacturer_transport_ratings            manufacturer_transport_ratings[]
+  products                                  products[]
+  quotations                                quotations[]
+  sample_orders                             sample_orders[]
+  transport_provider_manufacturer_inquiries transport_provider_manufacturer_inquiries[]
+  transport_provider_manufacturer_ratings   transport_provider_manufacturer_ratings[]
+
+  @@index([category], map: "idx_manufacturers_category")
+  @@index([country_code], map: "idx_manufacturers_country_code")
+  @@index([is_verified], map: "idx_manufacturers_is_verified")
+  @@index([phone], map: "idx_manufacturers_phone")
+  @@map("manufacturers")
+}
+
+model Endcustomer {
+  id             String           @id(map: "customers_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  email          String?
+  company_name   String?          @map("company_name")
+  state          String?
+  district       String?
+  city           String?
+  pin_code       String?          @map("pin_code")
+  country        String?
+  gst_details    String?          @map("gst_details")
+  created_at     DateTime?        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at     DateTime?        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  vatno          String?
+  panno          String?
+  phone          String?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  category       String?          @default("end_buyer")
+  deleted_at     DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  customers_auth customers_auth[]
+  inquiries      inquiries[]
+  orders         orders[]
+  quotations     quotations[]
+  sample_orders  sample_orders[]
+
+  @@index([category], map: "idx_endcustomers_category")
+  @@map("endcustomers")
+}
+
+model CoalProvider {
+  id                                   String                                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                 String
+  email                                String
+  phone                                String                                 @unique
+  country                              String                                 @default("India")
+  company_name                         String                                 @map("company_name")
+  state                                String
+  district                             String
+  city                                 String
+  pincode                              String
+  supply_capacity                      String?                                @map("supply_capacity")
+  exim_code                            String?                                @map("exim_code")
+  pan_no                               String?                                @map("pan_no")
+  biz_gst                              String?                                @map("biz_gst")
+  additional_info                      String?                                @map("additional_info")
+  created_at                           DateTime?                              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at                           DateTime?                              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  delivery_service_area                String?                                @map("delivery_service_area")
+  category                             String?                                @default("coal_provider")
+  fuel_types                           String[]                               @map("fuel_types")
+  country_code                         String?                                @default("+91") @map("country_code")
+  coal_provider_manufacturer_inquiries coal_provider_manufacturer_inquiries[]
+  coal_provider_manufacturer_ratings   coal_provider_manufacturer_ratings[]
+  inquiry_response_history             inquiry_response_history[]
+  manufacturer_coal_inquiries          manufacturer_coal_inquiries[]
+  manufacturer_coal_orders             manufacturer_coal_orders[]
+  manufacturer_coal_quotations         manufacturer_coal_quotations[]
+  manufacturer_coal_ratings            manufacturer_coal_ratings[]
+
+  @@index([category], map: "idx_coal_providers_category")
+  @@index([state, district, city], map: "idx_coal_providers_location")
+  @@index([phone], map: "idx_coal_providers_phone")
+  @@map("coal_providers")
+}
+
+model TransportProvider {
+  id                                        String                                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                      String
+  email                                     String
+  phone                                     String                                      @unique
+  company_name                              String                                      @map("company_name")
+  country                                   String                                      @default("India")
+  state                                     String
+  district                                  String
+  city                                      String
+  pincode                                   String
+  transport_type                            String                                      @map("transport_type")
+  vehicle_capacity                          String?                                     @map("vehicle_capacity")
+  service_area                              String                                      @map("service_area")
+  biz_gst                                   String?                                     @map("biz_gst")
+  pan_no                                    String?                                     @map("pan_no")
+  exim_code                                 String?                                     @map("exim_code")
+  additional_info                           String?                                     @map("additional_info")
+  created_at                                DateTime?                                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at                                DateTime?                                   @default(now()) @map("updated_at") @db.Timestamptz(6)
+  category                                  String?                                     @default("transport_provider")
+  country_code                              String?                                     @default("+91") @map("country_code") @db.VarChar(10)
+  transport_types                           String[]                                    @map("transport_types")
+  manufacturer_transport_inquiries          manufacturer_transport_inquiries[]
+  manufacturer_transport_orders             manufacturer_transport_orders[]
+  manufacturer_transport_quotations         manufacturer_transport_quotations[]
+  manufacturer_transport_ratings            manufacturer_transport_ratings[]
+  transport_provider_manufacturer_inquiries transport_provider_manufacturer_inquiries[]
+  transport_provider_manufacturer_ratings   transport_provider_manufacturer_ratings[]
+
+  @@index([category], map: "idx_transport_providers_category")
+  @@index([city], map: "idx_transport_providers_city")
+  @@index([email], map: "idx_transport_providers_email")
+  @@index([phone], map: "idx_transport_providers_phone")
+  @@index([state], map: "idx_transport_providers_state")
+  @@map("transport_providers")
+}
+
+model LabourContractor {
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                        String
+  email                       String
+  phone                       String                        @unique
+  company_name                String                        @map("company_name")
+  country                     String                        @default("India")
+  category                    String                        @default("labour_contractor")
+  state                       String
+  district                    String
+  city                        String
+  pincode                     String
+  service_types               String[]                      @map("service_types")
+  experience_years            String                        @map("experience_years")
+  service_area                String                        @map("service_area")
+  additional_info             String?                       @map("additional_info")
+  biz_gst                     String?                       @map("biz_gst")
+  pan_no                      String?                       @map("pan_no")
+  exim_code                   String?                       @map("exim_code")
+  latitude                    Decimal?                      @db.Decimal(10, 8)
+  longitude                   Decimal?                      @db.Decimal(11, 8)
+  is_active                   Boolean?                      @default(true) @map("is_active")
+  created_at                  DateTime?                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at                  DateTime?                     @default(now()) @map("updated_at") @db.Timestamptz(6)
+  aadhar_no                   String?                       @map("aadhar_no")
+  labour_contractor_inquiries labour_contractor_inquiries[]
+  labour_contractor_projects  labour_contractor_projects[]
+  labour_contractor_ratings   labour_contractor_ratings[]
+
+  @@index([category], map: "idx_labour_contractors_category")
+  @@index([country], map: "idx_labour_contractors_country")
+  @@index([phone], map: "idx_labour_contractors_phone")
+  @@index([service_types], map: "idx_labour_contractors_service_types", type: Gin)
+  @@index([state], map: "idx_labour_contractors_state")
+  @@map("labour_contractors")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_access_logs {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String
+  status           String
+  ip_address       String?
+  user_agent       String?
+  timestamp        DateTime? @default(now()) @db.Timestamptz(6)
+  session_duration Int?
+  failure_reason   String?
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([email], map: "idx_admin_access_logs_email")
+  @@index([status], map: "idx_admin_access_logs_status")
+  @@index([timestamp], map: "idx_admin_access_logs_timestamp")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_users {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String    @unique
+  name           String
+  phone          String?
+  is_active      Boolean?  @default(true)
+  role           String?   @default("admin")
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  last_login     DateTime? @db.Timestamptz(6)
+  login_attempts Int?      @default(0)
+  blocked_until  DateTime? @db.Timestamptz(6)
+}
+
+model app_config {
+  key        String    @id
+  value      Json
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model coal_provider_manufacturer_inquiries {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coal_provider_id       String       @db.Uuid
+  manufacturer_id        String       @db.Uuid
+  product_id             String?      @db.Uuid
+  inquiry_type           String       @default("coal_supply") @db.VarChar(50)
+  message                String
+  coal_type              String?      @db.VarChar(100)
+  quantity               Int?
+  unit                   String?      @db.VarChar(20)
+  delivery_location      String?
+  expected_delivery_date DateTime?    @db.Date
+  price_per_unit         Decimal?     @db.Decimal(10, 2)
+  status                 String?      @default("pending") @db.VarChar(20)
+  created_at             DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?    @default(now()) @db.Timestamptz(6)
+  coal_providers         CoalProvider @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers          Manufacturer @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products               products?    @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model coal_provider_manufacturer_ratings {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manufacturer_id        String       @db.Uuid
+  coal_provider_id       String       @db.Uuid
+  rating                 Int
+  review_title           String?      @db.VarChar(200)
+  review_text            String?
+  payment_rating         Int?
+  communication_rating   Int?
+  professionalism_rating Int?
+  would_work_again       Boolean?     @default(true)
+  is_verified            Boolean?     @default(false)
+  created_at             DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?    @default(now()) @db.Timestamptz(6)
+  coal_providers         CoalProvider @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers          Manufacturer @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model customers {
+  id                               String    @id(map: "customers_pkey2") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                             String
+  email                            String
+  phone                            String
+  company_name                     String
+  state                            String
+  district                         String
+  kiln_type                        String
+  additional_info                  String?
+  interested_in_exclusive_services Boolean?  @default(false)
+  joined_date                      DateTime? @default(now()) @db.Timestamptz(6)
+  created_at                       DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model customers_auth {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  endcustomer_id String      @db.Uuid
+  phone          String      @unique
+  phone_verified Boolean?    @default(false)
+  last_login     DateTime?   @db.Timestamptz(6)
+  created_at     DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?   @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?   @db.Timestamptz(6)
+  endcustomers   Endcustomer @relation(fields: [endcustomer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "customers_auth_customer_id_fkey")
+}
+
+model downloadable_resources {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String    @db.VarChar(500)
+  description    String?
+  file_name      String    @db.VarChar(500)
+  file_url       String
+  file_type      String    @db.VarChar(100)
+  file_size      BigInt?
+  category       String?   @default("general") @db.VarChar(200)
+  is_active      Boolean?  @default(true)
+  download_count Int?      @default(0)
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([is_active], map: "idx_downloadable_resources_active")
+  @@index([category], map: "idx_downloadable_resources_category")
+  @@index([created_at], map: "idx_downloadable_resources_created_at")
+}
+
+model fraud_reports {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  reporter_phone        String
+  reporter_country_code String?  @default("+91")
+  reporter_verified     Boolean  @default(false)
+  category              String?
+  title                 String
+  description           String?
+  state                 String?
+  district              String?
+  city                  String?
+  attachments           String[] @default([])
+  status                String?  @default("pending")
+  source                String?
+  latitude              String?
+  longitude             String?
+  reporter_name         String?
+  company_name          String?
+  user_category         String?
+  country               String?
+
+  @@index([category], map: "idx_fraud_reports_category")
+  @@index([created_at(sort: Desc)], map: "idx_fraud_reports_created_at")
+  @@index([state, district, city], map: "idx_fraud_reports_location")
+}
+
+model inquiries {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id       String              @db.Uuid
+  manufacturer_id   String              @db.Uuid
+  subject           String
+  message           String
+  status            String              @default("pending")
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  endcustomers      Endcustomer         @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  manufacturers     Manufacturer        @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  inquiry_responses inquiry_responses[]
+}
+
+model inquiry_response_history {
+  id                          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiry_id                  String                      @db.Uuid
+  coal_provider_id            String                      @db.Uuid
+  manufacturer_id             String                      @db.Uuid
+  response_text               String
+  response_type               String?                     @default("text_response") @db.VarChar(50)
+  response_number             Int                         @default(1)
+  responded_by                String?                     @db.VarChar(100)
+  is_current_response         Boolean?                    @default(true)
+  created_at                  DateTime?                   @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                   @default(now()) @db.Timestamptz(6)
+  coal_providers              CoalProvider                @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_coal_inquiries manufacturer_coal_inquiries @relation(fields: [inquiry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers               Manufacturer                @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([coal_provider_id], map: "idx_inquiry_response_history_coal_provider_id")
+  @@index([inquiry_id], map: "idx_inquiry_response_history_inquiry_id")
+  @@index([is_current_response], map: "idx_inquiry_response_history_is_current")
+  @@index([manufacturer_id], map: "idx_inquiry_response_history_manufacturer_id")
+}
+
+model inquiry_responses {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiry_id      String    @db.Uuid
+  response_text   String
+  created_by      String    @db.Uuid
+  created_by_name String?
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  inquiries       inquiries @relation(fields: [inquiry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model labour_contractor_inquiries {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  labour_contractor_id       String                       @db.Uuid
+  client_name                String
+  client_email               String?
+  client_phone               String
+  service_type               String
+  project_description        String
+  location                   String?
+  budget_range               String?
+  timeline                   String?
+  status                     String                       @default("new")
+  priority                   String?                      @default("medium")
+  response                   String?
+  response_date              DateTime?                    @db.Timestamptz(6)
+  created_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  labour_contractors         LabourContractor             @relation(fields: [labour_contractor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  labour_contractor_projects labour_contractor_projects[]
+
+  @@index([labour_contractor_id], map: "idx_labour_contractor_inquiries_contractor")
+  @@index([status], map: "idx_labour_contractor_inquiries_status")
+}
+
+model labour_contractor_projects {
+  id                          String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  labour_contractor_id        String                       @db.Uuid
+  inquiry_id                  String?                      @db.Uuid
+  project_name                String
+  client_name                 String
+  client_contact              String?
+  service_type                String
+  project_description         String?
+  location                    String?
+  start_date                  DateTime?                    @db.Date
+  end_date                    DateTime?                    @db.Date
+  estimated_budget            Decimal?                     @db.Decimal(12, 2)
+  actual_cost                 Decimal?                     @db.Decimal(12, 2)
+  status                      String                       @default("pending")
+  progress_percentage         Int?                         @default(0)
+  notes                       String?
+  created_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  labour_contractor_inquiries labour_contractor_inquiries? @relation(fields: [inquiry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  labour_contractors          LabourContractor             @relation(fields: [labour_contractor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  labour_contractor_ratings   labour_contractor_ratings[]
+
+  @@index([labour_contractor_id], map: "idx_labour_contractor_projects_contractor")
+  @@index([status], map: "idx_labour_contractor_projects_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model labour_contractor_ratings {
+  id                         String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  labour_contractor_id       String                      @db.Uuid
+  project_id                 String?                     @db.Uuid
+  client_name                String
+  rating                     Int
+  review                     String?
+  service_quality            Int?
+  timeliness                 Int?
+  communication              Int?
+  value_for_money            Int?
+  would_recommend            Boolean?                    @default(true)
+  created_at                 DateTime?                   @default(now()) @db.Timestamptz(6)
+  labour_contractors         LabourContractor            @relation(fields: [labour_contractor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  labour_contractor_projects labour_contractor_projects? @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([labour_contractor_id], map: "idx_labour_contractor_ratings_contractor")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_coal_inquiries {
+  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manufacturer_id              String                         @db.Uuid
+  coal_provider_id             String                         @db.Uuid
+  product_id                   String?                        @db.Uuid
+  inquiry_type                 String                         @default("general_inquiry") @db.VarChar(50)
+  message                      String
+  quantity                     Int?
+  unit                         String?                        @db.VarChar(20)
+  delivery_location            String?
+  expected_delivery_date       DateTime?                      @db.Date
+  budget_range_min             Decimal?                       @db.Decimal(10, 2)
+  budget_range_max             Decimal?                       @db.Decimal(10, 2)
+  status                       String?                        @default("pending") @db.VarChar(20)
+  created_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  coal_type                    String?
+  provider_response            String?
+  provider_response_date       DateTime?                      @db.Timestamptz(6)
+  responded_by                 String?
+  inquiry_response_history     inquiry_response_history[]
+  coal_providers               CoalProvider                   @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers                Manufacturer                   @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                     products?                      @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  manufacturer_coal_quotations manufacturer_coal_quotations[]
+
+  @@index([coal_provider_id], map: "idx_manufacturer_coal_inquiries_coal_provider_id")
+  @@index([created_at], map: "idx_manufacturer_coal_inquiries_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_coal_inquiries_manufacturer_id")
+  @@index([status], map: "idx_manufacturer_coal_inquiries_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_coal_orders {
+  id                           String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation_id                 String?                       @db.Uuid
+  manufacturer_id              String                        @db.Uuid
+  coal_provider_id             String                        @db.Uuid
+  product_id                   String?                       @db.Uuid
+  order_number                 String                        @unique @db.VarChar(50)
+  coal_type                    String                        @db.VarChar(100)
+  quantity                     Int
+  unit                         String                        @db.VarChar(20)
+  price_per_unit               Decimal                       @db.Decimal(10, 2)
+  total_amount                 Decimal                       @db.Decimal(12, 2)
+  delivery_location            String
+  expected_delivery_date       DateTime?                     @db.Date
+  actual_delivery_date         DateTime?                     @db.Date
+  payment_status               String?                       @default("pending") @db.VarChar(20)
+  order_status                 String?                       @default("confirmed") @db.VarChar(20)
+  payment_terms                String?
+  special_instructions         String?
+  created_at                   DateTime?                     @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                     @default(now()) @db.Timestamptz(6)
+  coal_providers               CoalProvider                  @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers                Manufacturer                  @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                     products?                     @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  manufacturer_coal_quotations manufacturer_coal_quotations? @relation(fields: [quotation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_coal_ratings    manufacturer_coal_ratings[]
+
+  @@index([coal_provider_id], map: "idx_manufacturer_coal_orders_coal_provider_id")
+  @@index([created_at], map: "idx_manufacturer_coal_orders_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_coal_orders_manufacturer_id")
+  @@index([order_status], map: "idx_manufacturer_coal_orders_order_status")
+  @@index([payment_status], map: "idx_manufacturer_coal_orders_payment_status")
+}
+
+model manufacturer_coal_quotations {
+  id                          String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiry_id                  String?                      @db.Uuid
+  coal_provider_id            String                       @db.Uuid
+  manufacturer_id             String                       @db.Uuid
+  product_id                  String?                      @db.Uuid
+  coal_type                   String                       @db.VarChar(100)
+  quantity                    Int
+  unit                        String                       @db.VarChar(20)
+  price_per_unit              Decimal                      @db.Decimal(10, 2)
+  total_amount                Decimal                      @db.Decimal(12, 2)
+  delivery_location           String?
+  delivery_timeline           String?                      @db.VarChar(100)
+  payment_terms               String?
+  validity_period             Int?                         @default(30)
+  additional_notes            String?
+  status                      String?                      @default("pending") @db.VarChar(20)
+  created_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  manufacturer_coal_orders    manufacturer_coal_orders[]
+  coal_providers              CoalProvider                 @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_coal_inquiries manufacturer_coal_inquiries? @relation(fields: [inquiry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers               Manufacturer                 @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                    products?                    @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_manufacturer_coal_quotations_created_at")
+  @@index([inquiry_id], map: "idx_manufacturer_coal_quotations_inquiry_id")
+  @@index([status], map: "idx_manufacturer_coal_quotations_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_coal_ratings {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id                 String                   @db.Uuid
+  manufacturer_id          String                   @db.Uuid
+  coal_provider_id         String                   @db.Uuid
+  rating                   Int
+  review_title             String?                  @db.VarChar(200)
+  review_text              String?
+  quality_rating           Int?
+  delivery_rating          Int?
+  service_rating           Int?
+  would_recommend          Boolean?                 @default(true)
+  is_verified              Boolean?                 @default(false)
+  created_at               DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                @default(now()) @db.Timestamptz(6)
+  coal_providers           CoalProvider             @relation(fields: [coal_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers            Manufacturer             @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_coal_orders manufacturer_coal_orders @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([coal_provider_id], map: "idx_manufacturer_coal_ratings_coal_provider_id")
+  @@index([created_at], map: "idx_manufacturer_coal_ratings_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_coal_ratings_manufacturer_id")
+  @@index([rating], map: "idx_manufacturer_coal_ratings_rating")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_transport_inquiries {
+  id                                String                              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manufacturer_id                   String                              @db.Uuid
+  transport_provider_id             String                              @db.Uuid
+  product_id                        String?                             @db.Uuid
+  inquiry_type                      String                              @default("general_inquiry") @db.VarChar(50)
+  message                           String
+  pickup_location                   String
+  delivery_location                 String
+  cargo_weight                      Decimal?                            @db.Decimal(10, 2)
+  cargo_volume                      Decimal?                            @db.Decimal(10, 2)
+  expected_pickup_date              DateTime?                           @db.Date
+  expected_delivery_date            DateTime?                           @db.Date
+  transport_type                    String?                             @db.VarChar(50)
+  budget_range_min                  Decimal?                            @db.Decimal(10, 2)
+  budget_range_max                  Decimal?                            @db.Decimal(10, 2)
+  status                            String?                             @default("pending") @db.VarChar(20)
+  created_at                        DateTime?                           @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                           @default(now()) @db.Timestamptz(6)
+  manufacturers                     Manufacturer                        @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                          products?                           @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  transport_providers               TransportProvider                   @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_transport_quotations manufacturer_transport_quotations[]
+
+  @@index([created_at], map: "idx_manufacturer_transport_inquiries_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_transport_inquiries_manufacturer_id")
+  @@index([status], map: "idx_manufacturer_transport_inquiries_status")
+  @@index([transport_provider_id], map: "idx_manufacturer_transport_inquiries_transport_provider_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_transport_orders {
+  id                                String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation_id                      String                            @db.Uuid
+  manufacturer_id                   String                            @db.Uuid
+  transport_provider_id             String                            @db.Uuid
+  product_id                        String?                           @db.Uuid
+  order_number                      String                            @unique @db.VarChar(50)
+  pickup_location                   String
+  delivery_location                 String
+  pickup_date                       DateTime?                         @db.Date
+  expected_delivery_date            DateTime?                         @db.Date
+  actual_pickup_date                DateTime?                         @db.Date
+  actual_delivery_date              DateTime?                         @db.Date
+  cargo_description                 String?
+  cargo_weight                      Decimal?                          @db.Decimal(10, 2)
+  transport_type                    String                            @db.VarChar(50)
+  vehicle_type                      String?                           @db.VarChar(50)
+  total_cost                        Decimal                           @db.Decimal(12, 2)
+  payment_status                    String?                           @default("pending") @db.VarChar(20)
+  order_status                      String?                           @default("confirmed") @db.VarChar(20)
+  tracking_number                   String?                           @db.VarChar(100)
+  special_instructions              String?
+  created_at                        DateTime?                         @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                         @default(now()) @db.Timestamptz(6)
+  manufacturers                     Manufacturer                      @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                          products?                         @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  manufacturer_transport_quotations manufacturer_transport_quotations @relation(fields: [quotation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  transport_providers               TransportProvider                 @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_transport_ratings    manufacturer_transport_ratings[]
+
+  @@index([created_at], map: "idx_manufacturer_transport_orders_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_transport_orders_manufacturer_id")
+  @@index([order_status], map: "idx_manufacturer_transport_orders_order_status")
+  @@index([payment_status], map: "idx_manufacturer_transport_orders_payment_status")
+  @@index([transport_provider_id], map: "idx_manufacturer_transport_orders_transport_provider_id")
+}
+
+model manufacturer_transport_quotations {
+  id                               String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiry_id                       String                           @db.Uuid
+  transport_provider_id            String                           @db.Uuid
+  manufacturer_id                  String                           @db.Uuid
+  product_id                       String?                          @db.Uuid
+  pickup_location                  String
+  delivery_location                String
+  transport_type                   String                           @db.VarChar(50)
+  vehicle_type                     String?                          @db.VarChar(50)
+  cargo_capacity                   Decimal?                         @db.Decimal(10, 2)
+  price_per_km                     Decimal?                         @db.Decimal(10, 2)
+  base_charge                      Decimal?                         @db.Decimal(10, 2)
+  total_estimated_cost             Decimal                          @db.Decimal(12, 2)
+  estimated_duration               String?                          @db.VarChar(50)
+  payment_terms                    String?
+  validity_period                  Int?                             @default(30)
+  additional_notes                 String?
+  status                           String?                          @default("pending") @db.VarChar(20)
+  created_at                       DateTime?                        @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime?                        @default(now()) @db.Timestamptz(6)
+  manufacturer_transport_orders    manufacturer_transport_orders[]
+  manufacturer_transport_inquiries manufacturer_transport_inquiries @relation(fields: [inquiry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturers                    Manufacturer                     @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products                         products?                        @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  transport_providers              TransportProvider                @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_manufacturer_transport_quotations_created_at")
+  @@index([inquiry_id], map: "idx_manufacturer_transport_quotations_inquiry_id")
+  @@index([status], map: "idx_manufacturer_transport_quotations_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manufacturer_transport_ratings {
+  id                            String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id                      String                        @db.Uuid
+  manufacturer_id               String                        @db.Uuid
+  transport_provider_id         String                        @db.Uuid
+  rating                        Int
+  review_title                  String?                       @db.VarChar(200)
+  review_text                   String?
+  punctuality_rating            Int?
+  safety_rating                 Int?
+  service_rating                Int?
+  would_recommend               Boolean?                      @default(true)
+  is_verified                   Boolean?                      @default(false)
+  created_at                    DateTime?                     @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                     @default(now()) @db.Timestamptz(6)
+  manufacturers                 Manufacturer                  @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  manufacturer_transport_orders manufacturer_transport_orders @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  transport_providers           TransportProvider             @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_manufacturer_transport_ratings_created_at")
+  @@index([manufacturer_id], map: "idx_manufacturer_transport_ratings_manufacturer_id")
+  @@index([rating], map: "idx_manufacturer_transport_ratings_rating")
+  @@index([transport_provider_id], map: "idx_manufacturer_transport_ratings_transport_provider_id")
+}
+
+model mobile_app_content {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content_type    String
+  title           String?
+  subtitle        String?
+  description     String?
+  image_url       String?
+  action_url      String?
+  action_text     String?
+  priority        Int?      @default(0)
+  is_active       Boolean?  @default(true)
+  target_audience String?   @default("all")
+  start_date      DateTime? @db.Timestamptz(6)
+  end_date        DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model orders {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id      String      @db.Uuid
+  manufacturer_id  String
+  product_id       String
+  quantity         Int
+  price            Decimal     @db.Decimal(10, 2)
+  total_amount     Decimal     @db.Decimal(10, 2)
+  delivery_address String
+  contact_number   String
+  status           String      @default("pending")
+  tracking_number  String?
+  created_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  endcustomers     Endcustomer @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model otp_codes {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone       String
+  code        String
+  expires_at  DateTime  @db.Timestamptz(6)
+  used        Boolean?  @default(false)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  auth_method String?   @default("sms")
+
+  @@index([auth_method], map: "idx_otp_codes_auth_method")
+  @@index([phone, auth_method], map: "idx_otp_codes_phone_auth_method")
+}
+
+model products {
+  id                                        String                                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manufacturer_id                           String                                      @db.Uuid
+  name                                      String
+  description                               String?
+  price                                     Decimal?                                    @db.Decimal(10, 2)
+  image_url                                 String?
+  category                                  String?
+  created_at                                DateTime?                                   @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime?                                   @default(now()) @db.Timestamptz(6)
+  is_available                              Boolean?                                    @default(true)
+  specifications                            Json?
+  price_unit                                String?                                     @default("per piece")
+  dimensions                                String?
+  stock_quantity                            Int?                                        @default(0)
+  coal_provider_manufacturer_inquiries      coal_provider_manufacturer_inquiries[]
+  manufacturer_coal_inquiries               manufacturer_coal_inquiries[]
+  manufacturer_coal_orders                  manufacturer_coal_orders[]
+  manufacturer_coal_quotations              manufacturer_coal_quotations[]
+  manufacturer_transport_inquiries          manufacturer_transport_inquiries[]
+  manufacturer_transport_orders             manufacturer_transport_orders[]
+  manufacturer_transport_quotations         manufacturer_transport_quotations[]
+  manufacturers                             Manufacturer                                @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  quotations                                quotations[]
+  sample_orders                             sample_orders[]
+  transport_provider_manufacturer_inquiries transport_provider_manufacturer_inquiries[]
+}
+
+model quotations {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id       String       @db.Uuid
+  manufacturer_id   String       @db.Uuid
+  product_id        String       @db.Uuid
+  quantity          Int
+  quoted_price      Decimal      @db.Decimal(10, 2)
+  total_amount      Decimal      @db.Decimal(10, 2)
+  message           String?
+  status            String       @default("pending")
+  created_at        DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?    @default(now()) @db.Timestamptz(6)
+  response_message  String?
+  response_quantity Int?
+  response_price    Decimal?     @db.Decimal(10, 2)
+  offer_expiry      DateTime?    @db.Timestamptz(6)
+  responded_at      DateTime?    @db.Timestamptz(6)
+  endcustomers      Endcustomer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  manufacturers     Manufacturer @relation(fields: [manufacturer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products          products     @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reach_us_form {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name    String
+  last_name     String
+  email         String
+  phone         String?
+  subject       String
+  message       String
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+  user_category String    @default("End Buyer")
+
+  @@index([created_at], map: "idx_reach_us_form_created_at")
+  @@index([email], map: "idx_reach_us_form_email")
+  @@index([user_category], map: "idx_reach_us_form_user_category")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sample_orders {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id      String       @db.Uuid
+  manufacturer_id  String       @db.Uuid
+  product_id       String       @db.Uuid
+  quantity         Int
+  delivery_address String
+  contact_number   String
+  status           String       @default("pending")
+  admin_response   String?
+  admin_id         String?      @db.Uuid
+  created_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  price            Decimal?     @default(0) @db.Decimal(10, 2)
+  total_amount     Decimal?     @default(0) @db.Decimal(10, 2)
+  users            users?       @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  endcustomers     Endcustomer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  manufacturers    Manufacturer @relation(fields: [manufacturer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products         products     @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model transport_provider_manufacturer_inquiries {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transport_provider_id String            @db.Uuid
+  manufacturer_id       String            @db.Uuid
+  product_id            String?           @db.Uuid
+  inquiry_type          String            @default("transport_service") @db.VarChar(50)
+  message               String
+  service_type          String?           @db.VarChar(100)
+  coverage_area         String?
+  vehicle_types         String[]
+  capacity_range        String?
+  price_per_km          Decimal?          @db.Decimal(10, 2)
+  minimum_charge        Decimal?          @db.Decimal(10, 2)
+  status                String?           @default("pending") @db.VarChar(20)
+  created_at            DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?         @default(now()) @db.Timestamptz(6)
+  transport_providers   TransportProvider @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transport_provider_manufacturer_inqu_transport_provider_id_fkey")
+  manufacturers         Manufacturer      @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products              products?         @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model transport_provider_manufacturer_ratings {
+  id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manufacturer_id        String            @db.Uuid
+  transport_provider_id  String            @db.Uuid
+  rating                 Int
+  review_title           String?           @db.VarChar(200)
+  review_text            String?
+  payment_rating         Int?
+  communication_rating   Int?
+  professionalism_rating Int?
+  would_work_again       Boolean?          @default(true)
+  is_verified            Boolean?          @default(false)
+  created_at             DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?         @default(now()) @db.Timestamptz(6)
+  transport_providers    TransportProvider @relation(fields: [transport_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transport_provider_manufacturer_rati_transport_provider_id_fkey")
+  manufacturers          Manufacturer      @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone         String          @unique
+  first_name    String
+  last_name     String
+  email         String?         @unique
+  address       String?
+  city          String?
+  state         String?
+  pincode       String?
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  sample_orders sample_orders[]
+}
+
+model website_content {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String    @unique
+  value      String
+  category   String?   @default("general")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
