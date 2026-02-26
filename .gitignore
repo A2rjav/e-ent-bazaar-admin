@@ -33,3 +33,12 @@ coverage
 .nyc_output
 .vercel
 *.tsbuildinfo
+
+# Local workspace artifacts (do not commit)
+/EENTBAZAAR_DEVELOPER.docx
+/ER Diagram.txt
+/WhatsApp_Bot_2Page.docx
+/e-ENT-Bazaar-Architecture.md
+/e-ENT-Bazaar-Project-Plan.md
+/flat-lab-10041855_production_neondb_*.pdf
+/swagger-spec.json
