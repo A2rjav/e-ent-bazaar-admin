@@ -35,7 +35,7 @@ export const mockAdminUsers: AdminUser[] = [
     id: "admin-002",
     email: "ops@entbazaar.com",
     name: "Operations Manager",
-    phone: "+91 98765 00001",
+    phone: "+91 98765 00001", 
     isActive: true,
     role: "operation_manager",
     createdAt: "2026-01-15T00:00:00Z",
@@ -101,12 +101,10 @@ export const mockDashboardData: DashboardData = {
     { state: "Karnataka", totalOrders: 12, delivered: 8, pending: 1 },
     { state: "Tamil Nadu", totalOrders: 8, delivered: 5, pending: 1 },
   ],
-  agingRequests: [
-    { id: "so-001", tableName: "sample_orders", customerName: "Ramesh Construction", manufacturerName: "Bharat Bricks Pvt Ltd", productName: "Handmade Bricks", status: "Pending", hoursInPending: 192, createdAt: "2026-02-01T10:00:00Z" },
-    { id: "so-002", tableName: "sample_orders", customerName: "Gupta Builders", manufacturerName: "Rajdhani Cement Works", productName: "Machine Clay Tiles", status: "Pending", hoursInPending: 168, createdAt: "2026-02-02T14:30:00Z" },
-    { id: "ord-003", tableName: "orders", customerName: "Patel Infrastructure", manufacturerName: "Gujarat Stone Suppliers", productName: "AAC Blocks", status: "Pending", hoursInPending: 144, createdAt: "2026-02-03T09:15:00Z" },
-    { id: "so-004", tableName: "sample_orders", customerName: "Singh & Sons Contractors", manufacturerName: "Northern Steel Co", productName: "Fly Ash Bricks", status: "Pending", hoursInPending: 120, createdAt: "2026-02-04T11:45:00Z" },
-    { id: "ord-005", tableName: "orders", customerName: "Deccan Developers", manufacturerName: "Southern Tiles Ltd", productName: "Clay Roof Tiles", status: "Pending", hoursInPending: 96, createdAt: "2026-02-05T08:00:00Z" },
+  participantPerformance: [
+    { id: "mfg-001", name: "Bharat Bricks Pvt Ltd", companyName: "Bharat Bricks Pvt Ltd", type: "manufacturer", totalOrders: 42, completedOrders: 28, averageRating: 4.2 },
+    { id: "mfg-002", name: "Rajdhani Cement Works", companyName: "Rajdhani Cement Works", type: "manufacturer", totalOrders: 34, completedOrders: 22, averageRating: 3.8 },
+    { id: "mfg-003", name: "Gujarat Stone Suppliers", companyName: "Gujarat Stone Suppliers", type: "manufacturer", totalOrders: 26, completedOrders: 16, averageRating: 4.5 },
   ],
 };
 

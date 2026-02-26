@@ -1,14 +1,30 @@
 // ============================================================
 // e-ENT Bazaar Admin Panel — Frontend Type Definitions
 // ============================================================
-// ALIGNED WITH REAL DATABASE SCHEMA (Neon PostgreSQL)
-// camelCase TS property = snake_case DB column
-// Only columns that ACTUALLY EXIST in the database are included.
+// ALIGNED WITH RAILWAY BACKEND API CONTRACT (Swagger)
+// https://e-ent-bazar-backend.up.railway.app/api/docs
 // ============================================================
 
 // ---------- Enums / Union types ----------
 
-/** DB: sample_orders.status / orders.status / inquiries.status (text) */
+/** Order statuses from Railway: orders */
+export type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "completed"
+  | "cancelled";
+
+/** Sample order statuses from Railway: sample_orders */
+export type SampleOrderStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "completed"
+  | "cancelled";
+
+/** Legacy alias used by some UI components */
 export type RequestStatus =
   | "Pending"
   | "Approved"
@@ -17,7 +33,14 @@ export type RequestStatus =
   | "Cancelled"
   | "Rejected";
 
-/** Maps to separate DB tables */
+/** Railway API participant type values (query param) */
+export type ParticipantApiType =
+  | "manufacturer"
+  | "transport_provider"
+  | "coal_provider"
+  | "labour_contractor";
+
+/** Frontend display participant types (includes ENDCUSTOMER for UI routing) */
 export type ParticipantType =
   | "MANUFACTURER"
   | "ENDCUSTOMER"
@@ -27,6 +50,9 @@ export type ParticipantType =
 
 /** Discriminator for the two order tables */
 export type OrderType = "SAMPLE" | "NORMAL";
+
+/** Request type for unified /api/admin/requests endpoint */
+export type RequestType = "inquiry" | "quotation" | "order" | "sample_order";
 
 /** DB: admin_users.role (text) */
 export type AdminRole = "super_admin" | "admin" | "operation_manager" | "content_team";
@@ -78,46 +104,67 @@ export interface AdminUser {
 
 // LoginCredentials removed — login is now Phone + OTP based
 
-// ---------- Dashboard ----------
+// ---------- Dashboard (Railway: 4 separate endpoints) ----------
 
-export interface DashboardSummary {
+/** GET /api/admin/dashboard/overview */
+export interface DashboardOverview {
   totalSampleOrders: number;
   totalOrders: number;
   pendingSampleOrders: number;
   pendingOrders: number;
   deliveredOrders: number;
   completionRate: number;
+  // Backend may send additional fields; keep flexible
+  [key: string]: unknown;
 }
 
+/** For backward‑compat with KPISection */
+export type DashboardSummary = DashboardOverview;
+
+/** GET /api/admin/dashboard/requests-by-status */
 export interface StatusCount {
   status: string;
   count: number;
 }
 
+/** GET /api/admin/dashboard/regional-trends */
 export interface RegionDemand {
-  state: string;                // Grouped by manufacturers.state / endcustomers.state
+  state: string;
   totalOrders: number;
   delivered: number;
   pending: number;
 }
 
-/** Aging items — sample_orders/orders with status = 'Pending' */
+/** GET /api/admin/dashboard/participant-performance */
+export interface ParticipantPerformance {
+  id: string;
+  name: string;
+  companyName: string;
+  type: string;
+  totalOrders: number;
+  completedOrders: number;
+  averageRating: number;
+  [key: string]: unknown;
+}
+
+/** Aging items — kept for backward‑compat (not a separate Railway endpoint) */
 export interface AgingRequest {
   id: string;
   tableName: "sample_orders" | "orders";
-  customerName: string;         // Resolved from customer_id
-  manufacturerName: string;     // Resolved from manufacturer_id
-  productName: string;          // Resolved from product_id
+  customerName: string;
+  manufacturerName: string;
+  productName: string;
   status: string;
-  hoursInPending: number;       // Computed: NOW() - created_at
+  hoursInPending: number;
   createdAt: string;
 }
 
+/** Composite dashboard data (assembled from 4 Railway endpoints) */
 export interface DashboardData {
-  summary: DashboardSummary;
+  summary: DashboardOverview;
   statusCounts: StatusCount[];
   regionDemand: RegionDemand[];
-  agingRequests: AgingRequest[];
+  participantPerformance: ParticipantPerformance[];
 }
 
 // ---------- Unified Order List Item ----------
@@ -191,24 +238,49 @@ export interface OrderDetail extends OrderListItem {
 
 // ---------- Order Filters ----------
 
+/** Shared filter params (both orders & sample-orders endpoints) */
 export interface OrderFilters {
-  orderType?: OrderType;
   status?: string;
   search?: string;
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  customer_id?: string;
+  manufacturer_id?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
-// ---------- Paginated Response ----------
+/** Filters for unified /api/admin/requests endpoint */
+export interface RequestFiltersParams {
+  type?: RequestType;
+  status?: string;
+  manufacturer_id?: string;
+  customer_id?: string;
+  state?: string;
+  from_date?: string;
+  to_date?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+// ---------- Paginated Response (Railway: PaginationMetaDto) ----------
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
 
 export interface PaginatedResponse<T> {
   data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  meta: PaginationMeta;
 }
 
 // ---------- Unified Participant (for shared list component) ----------
@@ -233,6 +305,27 @@ export interface ParticipantFilters {
   search?: string;
   page?: number;
   limit?: number;
+  state?: string;
+  is_verified?: boolean;
+  is_active?: boolean;
+}
+
+/** DTO for deactivating a participant (Railway requires reason) */
+export interface DeactivateParticipantDto {
+  reason: string;
+}
+
+/** Participant detail (GET /api/admin/participants/:id) */
+export interface ParticipantDetail extends Participant {
+  is_active?: boolean;
+  is_verified?: boolean;
+  [key: string]: unknown;
+}
+
+/** Reassign request DTO (PATCH /api/admin/requests/:id/reassign) */
+export interface ReassignRequestDto {
+  new_manufacturer_id: string;
+  reason: string;
 }
 
 // ---------- Products — DB: products ----------
@@ -264,21 +357,38 @@ export interface ManufacturerOption {
   city: string;                 // manufacturers.city
 }
 
-// ---------- Reviews ----------
-// No unified rating table in DB — aggregated from various *_ratings tables.
+// ---------- Reviews & Ratings ----------
+// Railway: 5 separate GET /api/admin/ratings/* endpoints
+// Response: ListRatingsResponseDto { data: RatingItemDto[] }
 
-export interface Review {
+/** Rating categories matching Railway endpoints */
+export type RatingCategory =
+  | "manufacturer-coal"
+  | "manufacturer-transport"
+  | "coal-provider-manufacturer"
+  | "transport-provider-manufacturer"
+  | "labour-contractor";
+
+/** Single rating item from Railway */
+export interface RatingItem {
   id: string;
-  sourceTable: string;          // Which rating table
-  rating: number;               // *.rating
-  reviewTitle: string | null;   // *.review_title
-  reviewText: string | null;    // *.review_text / *.review
-  isVerified: boolean;          // *.is_verified (where available)
-  wouldRecommend: boolean;      // *.would_recommend / *.would_work_again
-  createdAt: string;            // *.created_at
-  // Resolved participant names
+  rating: number;
+  reviewTitle: string | null;
+  reviewText: string | null;
+  isVerified: boolean;
+  wouldRecommend: boolean;
+  createdAt: string;
   reviewerName: string;
   reviewerType: string;
   revieweeName: string;
   revieweeType: string;
+  sourceTable?: string;
+}
+
+/** Backward-compat alias */
+export type Review = RatingItem;
+
+/** Response from each rating endpoint */
+export interface ListRatingsResponse {
+  data: RatingItem[];
 }

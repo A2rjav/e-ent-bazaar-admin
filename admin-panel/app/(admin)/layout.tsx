@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileTopBar } from "@/components/layout/mobile-top-bar";
 import { useUIStore } from "@/store/ui.store";
@@ -14,24 +15,38 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, initAuth } = useUIStore();
+  const { isAuthenticated, isAuthLoading, initAuth } = useUIStore();
   const loadAccessConfig = useAccessConfigStore((s) => s.load);
   const loadRolePermissions = useRolePermissionsStore((s) => s.load);
 
+  // Validate JWT token on mount
   useEffect(() => {
     initAuth();
     loadAccessConfig();
     loadRolePermissions();
   }, [initAuth, loadAccessConfig, loadRolePermissions]);
 
+  // Redirect to login when auth resolves as unauthenticated
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("ent-bazaar-auth");
-      if (!token) {
-        router.push("/login");
-      }
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router]);
+
+  // Show loading spinner while validating JWT
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verifying session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render admin content if not authenticated
+  if (!isAuthenticated) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">

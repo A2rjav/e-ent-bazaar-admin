@@ -87,7 +87,7 @@ export function PhoneInput({
 
   return (
     <div className={cn("space-y-1", className)}>
-      <div className="flex">
+      <div className="flex items-center rounded-md border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1">
         {/* Country code selector */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -95,7 +95,7 @@ export function PhoneInput({
             disabled={disabled}
             onClick={() => setOpen(!open)}
             className={cn(
-              "inline-flex h-10 items-center gap-1 rounded-l-md border border-r-0 border-input bg-muted px-2.5 text-sm transition-colors hover:bg-accent disabled:opacity-50",
+              "inline-flex h-9 items-center gap-1 rounded-l-md border-r border-input bg-muted px-2.5 text-sm transition-colors hover:bg-accent disabled:opacity-50",
               open && "bg-accent"
             )}
           >
@@ -152,7 +152,7 @@ export function PhoneInput({
           onChange={(e) => handleDigitChange(e.target.value)}
           maxLength={selectedCountry.maxDigits + 2}
           disabled={disabled}
-          className="rounded-l-none"
+          className="rounded-l-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}

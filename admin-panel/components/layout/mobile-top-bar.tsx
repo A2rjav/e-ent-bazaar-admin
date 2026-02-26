@@ -26,9 +26,6 @@ export function MobileTopBar() {
   const effectiveUser = viewAsUser ?? currentUser;
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("ent-bazaar-auth");
-    }
     logout();
     router.push("/login");
   };

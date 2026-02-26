@@ -73,6 +73,19 @@ export function normalizePhone(raw: string): string {
 }
 
 /**
+ * Extracts the country code (e.g. "+91") from a normalised phone string.
+ * Falls back to "+91" if no known code matches.
+ */
+export function extractCountryCode(normalizedPhone: string): string {
+  for (const c of COUNTRY_CODES) {
+    if (normalizedPhone.startsWith(c.dialCode)) {
+      return c.dialCode;
+    }
+  }
+  return "+91";
+}
+
+/**
  * Validation error message for phone inputs.
  */
 export const PHONE_ERROR = "Enter a valid phone number";

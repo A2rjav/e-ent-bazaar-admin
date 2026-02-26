@@ -99,9 +99,14 @@ const allNavItems: NavItem[] = [
   },
   {
     label: "Access Control",
-    href: "/access-control",
+    href: "/access-control/users",
     icon: ShieldCheck,
+    matchPrefix: "/access-control",
     section: "admin",
+    children: [
+      { label: "Users", href: "/access-control/users", icon: Users },
+      { label: "Roles", href: "/access-control/roles", icon: ShieldCheck },
+    ],
   },
 ];
 
@@ -154,9 +159,6 @@ export function Sidebar() {
   };
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("ent-bazaar-auth");
-    }
     logout();
     router.push("/login");
   };

@@ -29,14 +29,18 @@ export function RequestListPage({ orderType }: RequestListPageProps) {
     refetch,
   } = useQuery({
     queryKey: ["orders", orderType, status, search, page],
-    queryFn: () =>
-      api.getOrders({
-        orderType,
+    queryFn: () => {
+      const filters = {
         status: status === "ALL" ? undefined : status,
         search: search || undefined,
         page,
         limit,
-      }),
+      };
+      // Railway has separate endpoints for orders vs sample-orders
+      return orderType === "SAMPLE"
+        ? api.getSampleOrders(filters)
+        : api.getOrders(filters);
+    },
   });
 
   const handleStatusChange = (newStatus: string) => {

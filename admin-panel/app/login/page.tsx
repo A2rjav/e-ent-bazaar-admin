@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useUIStore } from "@/store/ui.store";
 import { api } from "@/lib/api";
-import { isValidPhone, normalizePhone, formatPhone, PHONE_ERROR } from "@/lib/phone";
+import { isValidPhone, normalizePhone, extractCountryCode, formatPhone, PHONE_ERROR } from "@/lib/phone";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -65,13 +65,21 @@ export default function LoginPage() {
     }
 
     const normalized = normalizePhone(phone);
+    const countryCode = extractCountryCode(normalized);
     setIsLoading(true);
     try {
-      await api.sendOtp(normalized);
+      await api.sendOtp(normalized, countryCode);
       setStep("otp");
       setResendTimer(30);
-    } catch {
-      setError("Failed to send OTP. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (message.includes("401")) {
+        setError("No admin account found with this phone number.");
+      } else if (message.includes("429")) {
+        setError("Too many attempts. Please wait before trying again.");
+      } else {
+        setError("Failed to send OTP. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -86,15 +94,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const normalized = normalizePhone(phone);
+    const countryCode = extractCountryCode(normalized);
     try {
-      const response = await api.verifyOtp(normalized, code);
+      // api.verifyOtp stores the token internally and fetches user profile
+      const response = await api.verifyOtp(normalized, code, countryCode);
       login(response.user);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("ent-bazaar-auth", response.token);
-      }
       router.push("/dashboard");
-    } catch {
-      setError("Invalid OTP. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (message.includes("429")) {
+        setError("Too many attempts. Please wait before trying again.");
+      } else {
+        setError("Invalid OTP. Please try again.");
+      }
       setOtp(["", "", "", "", "", ""]);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } finally {
@@ -148,8 +160,9 @@ export default function LoginPage() {
   const handleResend = async () => {
     setError("");
     const normalized = normalizePhone(phone);
+    const countryCode = extractCountryCode(normalized);
     try {
-      await api.sendOtp(normalized);
+      await api.sendOtp(normalized, countryCode);
       setResendTimer(30);
       setOtp(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
@@ -158,19 +171,34 @@ export default function LoginPage() {
     }
   };
 
-  // --- Google SSO ---
+  // --- Google SSO (Demo bypass — backend auth not yet implemented) ---
   const handleGoogleSignIn = async () => {
     setError("");
     setIsGoogleLoading(true);
     try {
-      const response = await api.loginWithGoogle();
-      login(response.user);
+      // Backend auth module is not built yet.
+      // Bypass: create a demo admin session directly so the panel is usable.
+      const demoUser = {
+        id: "demo-admin-001",
+        email: "admin@entbazaar.com",
+        name: "Admin User",
+        phone: "+919876543210",
+        isActive: true,
+        role: "super_admin",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        loginAttempts: 0,
+        blockedUntil: null,
+      };
       if (typeof window !== "undefined") {
-        localStorage.setItem("ent-bazaar-auth", response.token);
+        localStorage.setItem("ent-bazaar-auth", "demo-token");
+        localStorage.setItem("ent-bazaar-demo-user", JSON.stringify(demoUser));
       }
+      login(demoUser);
       router.push("/dashboard");
     } catch {
-      setError("Google sign-in failed. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsGoogleLoading(false);
     }
@@ -194,7 +222,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Google SSO */}
+          {/* Quick Demo Sign-in */}
           <Button
             type="button"
             variant="outline"
@@ -207,7 +235,7 @@ export default function LoginPage() {
             ) : (
               <GoogleIcon className="h-5 w-5" />
             )}
-            Sign in with Google
+            Sign in with Google (Demo)
           </Button>
 
           {/* Divider */}
@@ -245,14 +273,6 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Send OTP
               </Button>
-
-              <div className="rounded-md bg-muted p-3">
-                <p className="text-xs text-muted-foreground text-center">
-                  <span className="font-medium">Test phone:</span> +91 98765 00000
-                  <br />
-                  <span className="font-medium">Test OTP:</span> 123456
-                </p>
-              </div>
             </form>
           )}
 
