@@ -192,6 +192,9 @@ export interface OrderListItem {
   customerName?: string;          // endcustomers.name (via customer_id)
   manufacturerName?: string;      // manufacturers.name (via manufacturer_id)
   productName?: string;           // products.name (via product_id)
+
+  // Railway unified request type (inquiry, quotation, order, sample_order)
+  requestType?: string;
 }
 
 // ---------- Order Detail ----------

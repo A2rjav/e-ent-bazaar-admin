@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, Copy } from "lucide-react";
@@ -21,7 +21,9 @@ function getBackLink(orderType?: string): string {
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const requestType = searchParams.get("type") || undefined;
   const [copied, setCopied] = useState(false);
 
   const {
@@ -30,8 +32,8 @@ export default function OrderDetailPage() {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["order", id],
-    queryFn: () => api.getRequestById(id), // Railway unified: /api/admin/requests/:id
+    queryKey: ["order", id, requestType],
+    queryFn: () => api.getRequestById(id, requestType),
     enabled: !!id,
   });
 
@@ -103,7 +105,7 @@ export default function OrderDetailPage() {
             </Button>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            {`${order.product.name} — ${order.customer.companyName}`}
+            {[order.product?.name, order.customer?.companyName || order.customer?.name].filter(Boolean).join(" — ") || order.id}
           </p>
         </div>
       </div>

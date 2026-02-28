@@ -21,9 +21,10 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { Copy, Check } from "lucide-react";
 import type { OrderListItem, OrderType } from "@/lib/types";
 
-function CopyableId({ id }: { id: string }) {
+function CopyableId({ id, requestType }: { id: string; requestType?: string }) {
   const [copied, setCopied] = useState(false);
   const truncated = id.length > 8 ? `…${id.slice(-8)}` : id;
+  const typeParam = requestType ? `?type=${requestType}` : '';
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ function CopyableId({ id }: { id: string }) {
         <TooltipTrigger asChild>
           <span className="inline-flex items-center gap-1.5">
             <Link
-              href={`/requests/${id}`}
+              href={`/requests/${id}${typeParam}`}
               className="font-medium text-primary hover:underline"
             >
               {truncated}
@@ -92,7 +93,7 @@ export function RequestTable({ data, orderType }: RequestTableProps) {
         {data.map((order) => (
           <TableRow key={order.id} className="group/id">
             <TableCell>
-              <CopyableId id={order.id} />
+              <CopyableId id={order.id} requestType={order.requestType || (orderType === 'SAMPLE' ? 'sample_order' : 'order')} />
             </TableCell>
             <TableCell className="text-sm">
               <span className="line-clamp-2" title={order.customerName || order.customerId}>{order.customerName || order.customerId}</span>

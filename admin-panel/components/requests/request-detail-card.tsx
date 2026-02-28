@@ -20,15 +20,15 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
           <div>
             <CardTitle className="text-lg">{request.id}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {request.product.name} — Qty: {request.quantity.toLocaleString("en-IN")}
+              {request.product?.name || 'N/A'} — Qty: {request.quantity?.toLocaleString("en-IN") || '0'}
             </p>
           </div>
           <RequestStatusBadge status={request.status} />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <InfoItem label="Product" value={request.product.name} />
-            <InfoItem label="Category" value={request.product.category} />
+            <InfoItem label="Product" value={request.product?.name || 'N/A'} />
+            <InfoItem label="Category" value={request.product?.category || 'N/A'} />
             <InfoItem
               label="Quantity"
               value={request.quantity.toLocaleString("en-IN")}
@@ -80,12 +80,12 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="font-medium">{request.customer.companyName}</p>
-            <p className="text-sm text-muted-foreground">{request.customer.name}</p>
-            <p className="text-sm text-muted-foreground">{request.customer.email}</p>
-            <p className="text-sm text-muted-foreground">{formatPhone(request.customer.phone)}</p>
+            <p className="font-medium">{request.customer?.companyName || request.customer?.name || 'N/A'}</p>
+            <p className="text-sm text-muted-foreground">{request.customer?.name || ''}</p>
+            <p className="text-sm text-muted-foreground">{request.customer?.email || ''}</p>
+            <p className="text-sm text-muted-foreground">{formatPhone(request.customer?.phone || '')}</p>
             <p className="text-sm text-muted-foreground">
-              {request.customer.city}, {request.customer.district}, {request.customer.state}
+              {[request.customer?.city, request.customer?.district, request.customer?.state].filter(Boolean).join(", ")}
             </p>
           </CardContent>
         </Card>
@@ -97,18 +97,18 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="font-medium">{request.manufacturer.companyName}</p>
+            <p className="font-medium">{request.manufacturer?.companyName || request.manufacturer?.name || 'N/A'}</p>
             <p className="text-sm text-muted-foreground">
-              {request.manufacturer.name}
+              {request.manufacturer?.name || ''}
             </p>
             <p className="text-sm text-muted-foreground">
-              {request.manufacturer.email}
+              {request.manufacturer?.email || ''}
             </p>
             <p className="text-sm text-muted-foreground">
-              {formatPhone(request.manufacturer.phone)}
+              {formatPhone(request.manufacturer?.phone || '')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {request.manufacturer.city}, {request.manufacturer.district}, {request.manufacturer.state}
+              {[request.manufacturer?.city, request.manufacturer?.district, request.manufacturer?.state].filter(Boolean).join(", ")}
             </p>
           </CardContent>
         </Card>
