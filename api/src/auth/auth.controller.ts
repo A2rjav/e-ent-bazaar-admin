@@ -7,7 +7,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
+import { ApiKeyDto, SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
 
@@ -25,6 +25,12 @@ export class AuthController {
   @Post('verify-otp')
   verifyOtp(@Body() body: VerifyOtpDto) {
     return this.authService.verifyOtp(body.phone, body.code);
+  }
+
+  /** POST /api/admin/auth/api-key */
+  @Post('api-key')
+  loginWithApiKey(@Body() body: ApiKeyDto) {
+    return this.authService.loginWithApiKey(body.apiKey);
   }
 
   /** GET /api/admin/auth/me */

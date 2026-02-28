@@ -22,7 +22,7 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-type Step = "phone" | "otp";
+type Step = "phone" | "otp" | "api-key";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState("");
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -174,6 +175,22 @@ export default function LoginPage() {
     }
   };
 
+  // --- API Key Login ---
+  const handleApiKeyLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      const response = await api.loginWithApiKey(apiKey);
+      login(response.user);
+      router.push("/dashboard");
+    } catch {
+      setError("Invalid API key. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // --- Google SSO (Demo bypass) ---
   const handleGoogleSignIn = async () => {
     setError("");
@@ -275,6 +292,17 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Send OTP
               </Button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => { setError(""); setStep("api-key"); }}
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                  disabled={anyLoading}
+                >
+                  Use API key instead
+                </button>
+              </div>
             </form>
           )}
 
@@ -359,6 +387,38 @@ export default function LoginPage() {
                 )}
               </div>
             </div>
+          )}
+          {/* ===== STEP 3: API Key ===== */}
+          {step === "api-key" && (
+            <form onSubmit={handleApiKeyLogin} className="space-y-4">
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => { setStep("phone"); setError(""); setApiKey(""); }}
+                  className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={anyLoading}
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to phone login
+                </button>
+                <label htmlFor="apiKey" className="block text-sm font-medium leading-none">
+                  API Key
+                </label>
+                <input
+                  id="apiKey"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Enter API key"
+                  disabled={anyLoading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={anyLoading || !apiKey}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In with API Key
+              </Button>
+            </form>
           )}
         </CardContent>
       </Card>

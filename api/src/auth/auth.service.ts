@@ -117,6 +117,29 @@ export class AuthService {
   }
 
   // ---------------------------------------------------------------------------
+  // API KEY LOGIN (bypass for testing)
+  // ---------------------------------------------------------------------------
+  async loginWithApiKey(apiKey: string): Promise<{ access_token: string }> {
+    const validKey = process.env.ADMIN_API_KEY || 'e-ent-admin-test';
+    if (apiKey !== validKey) {
+      throw new UnauthorizedException('Invalid API key');
+    }
+
+    const admin = await this.prisma.admin_users.findFirst({
+      where: { is_active: true },
+      orderBy: { created_at: 'asc' },
+    });
+
+    if (!admin) {
+      throw new NotFoundException('No active admin found');
+    }
+
+    const payload = { sub: admin.id, email: admin.email, role: admin.role };
+    const access_token = this.jwtService.sign(payload);
+    return { access_token };
+  }
+
+  // ---------------------------------------------------------------------------
   // GET CURRENT USER (from JWT payload)
   // ---------------------------------------------------------------------------
   async getCurrentUser(userId: string) {

@@ -133,6 +133,36 @@ export const api = {
     return { user, token };
   },
 
+  /** POST /api/admin/auth/api-key  Body: { apiKey } */
+  loginWithApiKey: async (
+    apiKey: string
+  ): Promise<{ user: AdminUser; token: string }> => {
+    const data = await apiFetch<Record<string, unknown>>(
+      "/api/admin/auth/api-key",
+      {
+        method: "POST",
+        body: JSON.stringify({ apiKey }),
+      }
+    );
+
+    const token =
+      (data.access_token as string) ||
+      (data.token as string) ||
+      (data.accessToken as string) ||
+      "";
+
+    if (!token) {
+      throw new Error("No token received from server");
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ent-bazaar-auth", token);
+    }
+
+    const user = await api.getCurrentUser();
+    return { user, token };
+  },
+
   /** POST /api/admin/auth/google  Body: { idToken } */
   loginWithGoogle: async (
     idToken: string
