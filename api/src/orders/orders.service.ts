@@ -382,6 +382,25 @@ export class OrdersService {
     };
   }
 
+  async updateStatus(orderId: string, status: string, extra?: { tracking_number?: string; admin_response?: string }) {
+    // Try sample_order first, then regular order
+    const so = await this.prisma.sample_orders.findUnique({ where: { id: orderId } });
+    if (so) {
+      await this.prisma.sample_orders.update({
+        where: { id: orderId },
+        data: { status, ...(extra?.admin_response ? { admin_response: extra.admin_response } : {}) },
+      });
+      return { success: true };
+    }
+    const ord = await this.prisma.orders.findUnique({ where: { id: orderId } });
+    if (!ord) throw new NotFoundException('Order not found');
+    await this.prisma.orders.update({
+      where: { id: orderId },
+      data: { status, ...(extra?.tracking_number ? { tracking_number: extra.tracking_number } : {}) },
+    });
+    return { success: true };
+  }
+
   async reassign(orderId: string, manufacturerId: string) {
     const so = await this.prisma.sample_orders.findUnique({
       where: { id: orderId },

@@ -35,6 +35,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -68,7 +69,8 @@ export default function LoginPage() {
     const countryCode = extractCountryCode(normalized);
     setIsLoading(true);
     try {
-      await api.sendOtp(normalized, countryCode);
+      const result = await api.sendOtp(normalized, countryCode);
+      if (result.code) setDevOtpCode(result.code);
       setStep("otp");
       setResendTimer(30);
     } catch (err) {
@@ -162,7 +164,8 @@ export default function LoginPage() {
     const normalized = normalizePhone(phone);
     const countryCode = extractCountryCode(normalized);
     try {
-      await api.sendOtp(normalized, countryCode);
+      const result = await api.sendOtp(normalized, countryCode);
+      if (result.code) setDevOtpCode(result.code);
       setResendTimer(30);
       setOtp(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
@@ -171,13 +174,12 @@ export default function LoginPage() {
     }
   };
 
-  // --- Google SSO (Demo bypass — backend auth not yet implemented) ---
+  // --- Google SSO (Demo bypass) ---
   const handleGoogleSignIn = async () => {
     setError("");
     setIsGoogleLoading(true);
     try {
-      // Backend auth module is not built yet.
-      // Bypass: create a demo admin session directly so the panel is usable.
+      // OTP auth is now live. Google SSO keeps working as a quick demo bypass.
       const demoUser = {
         id: "demo-admin-001",
         email: "admin@entbazaar.com",
@@ -287,6 +289,7 @@ export default function LoginPage() {
                     setStep("phone");
                     setOtp(["", "", "", "", "", ""]);
                     setError("");
+                    setDevOtpCode(null);
                   }}
                   className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   disabled={anyLoading}
@@ -298,6 +301,16 @@ export default function LoginPage() {
                   Enter the 6-digit code sent to{" "}
                   <span className="font-medium text-foreground">{formatPhone(phone)}</span>
                 </p>
+                {devOtpCode && (
+                  <button
+                    type="button"
+                    onClick={() => setOtp(devOtpCode.split(""))}
+                    className="inline-block rounded bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs text-amber-800 font-mono tracking-widest hover:bg-amber-100 transition-colors"
+                    title="Click to auto-fill"
+                  >
+                    Dev OTP: {devOtpCode}
+                  </button>
+                )}
               </div>
 
               {/* OTP Input Boxes */}

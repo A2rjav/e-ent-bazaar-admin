@@ -1,6 +1,6 @@
 import { Controller, Get, Patch, Param, Query, Body } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { OrderQueryDto, ReassignDto } from './dto/order-query.dto';
+import { OrderQueryDto, ReassignDto, UpdateStatusDto } from './dto/order-query.dto';
 
 @Controller('admin/orders')
 export class OrdersController {
@@ -19,6 +19,14 @@ export class OrdersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ordersService.findById(id);
+  }
+
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto) {
+    return this.ordersService.updateStatus(id, body.status, {
+      tracking_number: body.tracking_number,
+      admin_response: body.admin_response,
+    });
   }
 
   @Patch(':id/reassign')

@@ -12,14 +12,12 @@ import type {
   RatingItem,
   RatingCategory,
   ListRatingsResponse,
-  ManufacturerOption,
   OrderFilters,
   RequestFiltersParams,
   ParticipantFilters,
   ParticipantType,
   PaginatedResponse,
   DeactivateParticipantDto,
-  ReassignRequestDto,
 } from "./types";
 
 // ============================================================================
@@ -75,20 +73,6 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-/** Map frontend ParticipantType → Railway API query param value */
-function toApiParticipantType(
-  type: ParticipantType
-): string {
-  const map: Record<ParticipantType, string> = {
-    MANUFACTURER: "manufacturer",
-    TRANSPORT_PROVIDER: "transport_provider",
-    COAL_PROVIDER: "coal_provider",
-    LABOUR_CONTRACTOR: "labour_contractor",
-    ENDCUSTOMER: "endcustomer", // Not in Railway — will be gap
-  };
-  return map[type] || type.toLowerCase();
-}
-
 /** Build URLSearchParams from a filters object, skipping undefined/empty values */
 function buildParams(filters: Record<string, unknown> | object): URLSearchParams {
   const params = new URLSearchParams();
@@ -109,12 +93,12 @@ export const api = {
   sendOtp: async (
     phone: string,
     countryCode: string = "+91"
-  ): Promise<{ success: boolean }> => {
-    await apiFetch("/api/admin/auth/send-otp", {
+  ): Promise<{ success: boolean; code?: string }> => {
+    const data = await apiFetch<{ success: boolean; code?: string }>("/api/admin/auth/send-otp", {
       method: "POST",
       body: JSON.stringify({ phone, countryCode }),
     });
-    return { success: true };
+    return { success: true, code: data.code };
   },
 
   /** POST /api/admin/auth/verify-otp  Body: { phone, code, countryCode } */
@@ -212,8 +196,7 @@ export const api = {
   },
 
   /**
-   * Composite: fetch all 4 dashboard endpoints in parallel.
-   * Returns the merged DashboardData for backward compat with the dashboard page.
+   * Composite dashboard fetch — calls 4 Railway sub-endpoints in parallel.
    */
   getDashboardSummary: async (): Promise<DashboardData> => {
     const [summary, statusCounts, regionDemand, participantPerformance] =
@@ -320,21 +303,6 @@ export const api = {
     return apiFetch(`/api/admin/requests/${id}/history`);
   },
 
-  /** PATCH /api/admin/requests/:id/reassign  Body: { new_manufacturer_id, reason } */
-  reassignManufacturer: async (
-    requestId: string,
-    newManufacturerId: string,
-    reason: string
-  ): Promise<unknown> => {
-    return apiFetch(`/api/admin/requests/${requestId}/reassign`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        new_manufacturer_id: newManufacturerId,
-        reason,
-      } satisfies ReassignRequestDto),
-    });
-  },
-
   // ==========================================================================
   // PARTICIPANTS — Railway: GET /api/admin/participants, /:id, /:id/activate, /:id/deactivate, /:id/performance
   // ==========================================================================
@@ -343,11 +311,7 @@ export const api = {
   getParticipants: async (
     filters: ParticipantFilters
   ): Promise<PaginatedResponse<Participant>> => {
-    const params = buildParams({
-      ...filters,
-      type: toApiParticipantType(filters.type),
-    });
-    // Remove the original 'type' if it was uppercase (already converted)
+    const params = buildParams(filters);
     return apiFetch<PaginatedResponse<Participant>>(
       `/api/admin/participants?${params.toString()}`
     );
@@ -359,7 +323,7 @@ export const api = {
   },
 
   /** PATCH /api/admin/participants/:id/activate */
-  activateParticipant: async (id: string): Promise<unknown> => {
+  activateParticipant: async (type: ParticipantType, id: string): Promise<unknown> => {
     return apiFetch(`/api/admin/participants/${id}/activate`, {
       method: "PATCH",
     });
@@ -367,6 +331,7 @@ export const api = {
 
   /** PATCH /api/admin/participants/:id/deactivate  Body: { reason } */
   deactivateParticipant: async (
+    type: ParticipantType,
     id: string,
     reason: string
   ): Promise<unknown> => {
@@ -376,17 +341,17 @@ export const api = {
     });
   },
 
-  /** Convenience: toggle active state (backward compat) */
+  /** Convenience: toggle active state */
   toggleParticipant: async (
     participantId: string,
     isActive: boolean,
-    _type?: string,
+    type: ParticipantType,
     reason?: string
   ): Promise<unknown> => {
     if (isActive) {
-      return api.activateParticipant(participantId);
+      return api.activateParticipant(type, participantId);
     }
-    return api.deactivateParticipant(participantId, reason || "Deactivated by admin");
+    return api.deactivateParticipant(type, participantId, reason || "Deactivated by admin");
   },
 
   /** GET /api/admin/participants/:id/performance */
@@ -434,32 +399,6 @@ export const api = {
     throw new Error(
       "Delete review is not available in the current backend API. Contact the backend team."
     );
-  },
-
-  // ==========================================================================
-  // MANUFACTURER OPTIONS — local backend utility (not in Railway)
-  // ==========================================================================
-
-  getManufacturerOptions: async (): Promise<ManufacturerOption[]> => {
-    // Try dedicated endpoint first, fall back to participants list
-    try {
-      return await apiFetch<ManufacturerOption[]>(
-        "/api/admin/orders/manufacturer-options"
-      );
-    } catch {
-      // Fallback: fetch manufacturers via participants endpoint
-      const res = await api.getParticipants({
-        type: "MANUFACTURER",
-        limit: 100,
-      });
-      return res.data.map((p) => ({
-        id: p.id,
-        name: p.name,
-        companyName: p.companyName,
-        state: p.state,
-        city: p.city,
-      }));
-    }
   },
 
   // ==========================================================================

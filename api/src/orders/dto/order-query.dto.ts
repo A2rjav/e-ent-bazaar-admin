@@ -31,3 +31,27 @@ export class ReassignDto {
   @IsString()
   manufacturerId: string;
 }
+
+/** Used by PATCH /api/admin/requests/:id/reassign (Railway contract) */
+export class RequestsReassignDto {
+  @IsString()
+  new_manufacturer_id: string;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+
+/** Used by PATCH /api/admin/orders/:id/status */
+export class UpdateStatusDto {
+  @IsString()
+  status: string;
+
+  @IsOptional()
+  @IsString()
+  tracking_number?: string;
+
+  @IsOptional()
+  @IsString()
+  admin_response?: string;
+}

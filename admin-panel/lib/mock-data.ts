@@ -5,7 +5,6 @@ import type {
   OrderDetail,
   Participant,
   Review,
-  ManufacturerOption,
   ParticipantType,
   RequestStatus,
 } from "./types";
@@ -294,16 +293,3 @@ export const mockReviews: Review[] = [
   { id: "rev-007", sourceTable: "manufacturer_transport_ratings", rating: 4, reviewTitle: "Reliable transport", reviewText: "On-time pickup and delivery. Will use again.", isVerified: true, wouldRecommend: true, createdAt: "2026-01-22T13:20:00Z", reviewerName: "Central Stone Works", reviewerType: "Manufacturer", revieweeName: "Highway Transport Services", revieweeType: "Transport Provider" },
 ];
 
-// ============================================================
-// Manufacturer options for reassignment — DB: manufacturers
-// ============================================================
-
-export const mockManufacturerOptions: ManufacturerOption[] = manufacturerNames.map(
-  (cname, idx) => ({
-    id: `mfg-${String(idx + 1).padStart(3, "0")}`,
-    name: cname.split(" ")[0] + " " + (cname.split(" ")[1] || "Kumar"),
-    companyName: cname,
-    state: states[idx % states.length],
-    city: cities[idx % cities.length],
-  })
-);

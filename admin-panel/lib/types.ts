@@ -33,13 +33,6 @@ export type RequestStatus =
   | "Cancelled"
   | "Rejected";
 
-/** Railway API participant type values (query param) */
-export type ParticipantApiType =
-  | "manufacturer"
-  | "transport_provider"
-  | "coal_provider"
-  | "labour_contractor";
-
 /** Frontend display participant types (includes ENDCUSTOMER for UI routing) */
 export type ParticipantType =
   | "MANUFACTURER"
@@ -322,12 +315,6 @@ export interface ParticipantDetail extends Participant {
   [key: string]: unknown;
 }
 
-/** Reassign request DTO (PATCH /api/admin/requests/:id/reassign) */
-export interface ReassignRequestDto {
-  new_manufacturer_id: string;
-  reason: string;
-}
-
 // ---------- Products — DB: products ----------
 
 export interface Product {
@@ -345,16 +332,6 @@ export interface Product {
   stockQuantity: number | null;
   createdAt: string;
   updatedAt: string;
-}
-
-// ---------- Manufacturer option for reassign ----------
-
-export interface ManufacturerOption {
-  id: string;                   // manufacturers.id
-  name: string;                 // manufacturers.name
-  companyName: string;          // manufacturers.company_name
-  state: string;                // manufacturers.state
-  city: string;                 // manufacturers.city
 }
 
 // ---------- Reviews & Ratings ----------

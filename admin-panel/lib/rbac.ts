@@ -52,7 +52,6 @@ export const DEFAULT_ACCESS_BY_ROLE: Record<AdminRole, Record<ModuleId, AccessLe
 /** Permission keys matching backend (for future button-level gating). */
 export type PermissionKey =
   | "requests.read"
-  | "requests.reassign"
   | "participants.read"
   | "participants.disable"
   | "orders.read"
@@ -68,7 +67,6 @@ const PERMISSION_BY_ROLE: Record<AdminRole, PermissionKey[] | "*"> = {
   super_admin: "*",
   admin: [
     "requests.read",
-    "requests.reassign",
     "participants.read",
     "participants.disable",
     "orders.read",
@@ -77,7 +75,6 @@ const PERMISSION_BY_ROLE: Record<AdminRole, PermissionKey[] | "*"> = {
   ],
   operation_manager: [
     "requests.read",
-    "requests.reassign",
     "participants.read",
     "participants.disable",
     "orders.read",
