@@ -21,6 +21,8 @@ import type {
   PaginatedResponse,
   PaginationMeta,
   DeactivateParticipantDto,
+  CoalOrderListItem,
+  TransportOrderListItem,
 } from "./types";
 
 // ============================================================================
@@ -110,14 +112,32 @@ const PARTICIPANT_TYPE_FROM_RAILWAY: Record<string, string> = {
 };
 
 function mapOverview(raw: any): DashboardOverview {
-  // Railway: { requests: { total, pending, ... }, participants: { ... }, revenue: { ... } }
+  // Detect format: local backend returns flat camelCase, Railway returns nested objects
+  if (raw.totalOrders !== undefined || raw.totalSampleOrders !== undefined) {
+    // Local backend — already flat camelCase, pass through
+    return {
+      totalSampleOrders: Number(raw.totalSampleOrders || 0),
+      totalOrders: Number(raw.totalOrders || 0),
+      pendingSampleOrders: Number(raw.pendingSampleOrders || 0),
+      pendingOrders: Number(raw.pendingOrders || 0),
+      deliveredOrders: Number(raw.deliveredOrders || 0),
+      completionRate: Number(raw.completionRate || 0),
+      totalManufacturers: Number(raw.totalManufacturers || 0),
+      totalEndcustomers: Number(raw.totalEndcustomers || 0),
+      totalCoalProviders: Number(raw.totalCoalProviders || 0),
+      totalTransportProviders: Number(raw.totalTransportProviders || 0),
+      totalOrderValue: Number(raw.totalOrderValue || 0),
+      avgCustomerRating: Number(raw.avgCustomerRating || 0),
+    };
+  }
+  // Railway — nested { requests, participants, revenue, performance }
   const r = raw.requests || {};
   const p = raw.participants || {};
   const rev = raw.revenue || {};
   const totalOrders = Number(r.total || 0);
   const delivered = Number(r.completed || r.delivered || 0);
   return {
-    totalSampleOrders: 0, // Railway doesn't separate sample orders in overview
+    totalSampleOrders: 0,
     totalOrders: totalOrders,
     pendingSampleOrders: 0,
     pendingOrders: Number(r.pending || 0),
@@ -558,12 +578,13 @@ export const api = {
   getParticipants: async (
     filters: ParticipantFilters
   ): Promise<PaginatedResponse<Participant>> => {
-    // Railway requires lowercase participant types
-    const railwayFilters = {
-      ...filters,
-      type: PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase(),
-    };
-    const params = buildParams(railwayFilters);
+    // Try with the original type first; if it fails with 400, retry with lowercase (Railway)
+    const isRailway = API_BASE.includes('railway.app');
+    const typeValue = isRailway
+      ? (PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase())
+      : filters.type;
+    const adjustedFilters = { ...filters, type: typeValue };
+    const params = buildParams(adjustedFilters);
     const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
       `/api/admin/participants?${params.toString()}`
     );
@@ -655,6 +676,34 @@ export const api = {
     throw new Error(
       "Delete review is not available in the current backend API. Contact the backend team."
     );
+  },
+
+  // ==========================================================================
+  // COAL ORDERS — GET /api/admin/coal-orders
+  // ==========================================================================
+
+  getCoalOrders: async (
+    filters: OrderFilters = {}
+  ): Promise<PaginatedResponse<CoalOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: CoalOrderListItem[]; meta: PaginationMeta }>(
+      `/api/admin/coal-orders?${params.toString()}`
+    );
+    return { data: raw.data || [], meta: raw.meta };
+  },
+
+  // ==========================================================================
+  // TRANSPORT ORDERS — GET /api/admin/transport-orders
+  // ==========================================================================
+
+  getTransportOrders: async (
+    filters: OrderFilters = {}
+  ): Promise<PaginatedResponse<TransportOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: TransportOrderListItem[]; meta: PaginationMeta }>(
+      `/api/admin/transport-orders?${params.toString()}`
+    );
+    return { data: raw.data || [], meta: raw.meta };
   },
 
   // ==========================================================================

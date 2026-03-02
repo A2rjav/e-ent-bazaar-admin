@@ -231,6 +231,181 @@ export class OrdersService {
     return this.mapOrderDetail(order);
   }
 
+  /**
+   * Returns request detail in Railway/unified API shape so the frontend
+   * mapRequestDetail() works without frontend changes (details, type, timeline).
+   */
+  async getRequestDetailUnified(id: string) {
+    const sampleOrder = await this.prisma.sample_orders.findUnique({
+      where: { id },
+      include: {
+        endcustomers: true,
+        manufacturers: true,
+        products: true,
+      },
+    });
+
+    if (sampleOrder) {
+      return this.toRailwayRequestShape(sampleOrder, 'sample_order');
+    }
+
+    const order = await this.prisma.orders.findUnique({
+      where: { id },
+      include: { endcustomers: true },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    const manufacturer =
+      order.manufacturer_id &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        order.manufacturer_id,
+      )
+        ? await this.prisma.manufacturer.findUnique({
+            where: { id: order.manufacturer_id },
+          })
+        : null;
+    const product =
+      order.product_id &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        order.product_id,
+      )
+        ? await this.prisma.products.findUnique({
+            where: { id: order.product_id },
+          })
+        : null;
+
+    return this.toRailwayRequestShapeOrder(order, manufacturer, product);
+  }
+
+  private toRailwayRequestShape(so: any, type: 'sample_order') {
+    const details = {
+      product_id: so.product_id,
+      quantity: so.quantity,
+      price: so.price != null ? Number(so.price) : null,
+      total_amount: so.total_amount != null ? Number(so.total_amount) : null,
+      delivery_address: so.delivery_address || '',
+      contact_number: so.contact_number || '',
+      admin_response: so.admin_response ?? null,
+      tracking_number: so.tracking_number ?? null,
+      product_name: so.products?.name || '',
+      category: so.products?.category || '',
+      price_unit: so.products?.price_unit || null,
+    };
+
+    const timeline = [
+      {
+        event: 'created',
+        changed_by: 'System',
+        timestamp: so.created_at?.toISOString?.() || '',
+      },
+    ];
+    if (so.status && so.status !== 'pending') {
+      timeline.push({
+        event: so.status,
+        changed_by: so.manufacturers?.name || 'System',
+        timestamp: so.updated_at?.toISOString?.() || '',
+      });
+    }
+
+    return {
+      id: so.id,
+      type: 'sample_order' as const,
+      status: so.status || '',
+      created_at: so.created_at?.toISOString?.() || '',
+      updated_at: so.updated_at?.toISOString?.() || '',
+      product_id: so.product_id,
+      quantity: so.quantity,
+      product_name: so.products?.name || '',
+      customer: {
+        id: so.customer_id,
+        name: so.endcustomers?.name || '',
+        company_name: so.endcustomers?.company_name || '',
+        email: so.endcustomers?.email || '',
+        phone: so.endcustomers?.phone || '',
+        state: so.endcustomers?.state || '',
+        district: so.endcustomers?.district || '',
+        city: so.endcustomers?.city || '',
+      },
+      manufacturer: {
+        id: so.manufacturer_id,
+        name: so.manufacturers?.name || '',
+        company_name: so.manufacturers?.company_name || '',
+        email: so.manufacturers?.email || '',
+        phone: so.manufacturers?.phone || '',
+        state: so.manufacturers?.state || '',
+        district: so.manufacturers?.district || '',
+        city: so.manufacturers?.city || '',
+      },
+      details,
+      timeline,
+    };
+  }
+
+  private toRailwayRequestShapeOrder(o: any, manufacturer: any, product: any) {
+    const details = {
+      product_id: o.product_id,
+      quantity: o.quantity,
+      price: o.price != null ? Number(o.price) : null,
+      total_amount: o.total_amount != null ? Number(o.total_amount) : null,
+      delivery_address: o.delivery_address || '',
+      contact_number: o.contact_number || '',
+      admin_response: null,
+      tracking_number: o.tracking_number ?? null,
+      product_name: product?.name || '',
+      category: product?.category || '',
+      price_unit: product?.price_unit || null,
+    };
+
+    const timeline = [
+      {
+        event: 'created',
+        changed_by: 'System',
+        timestamp: o.created_at?.toISOString?.() || '',
+      },
+    ];
+    if (o.status && o.status !== 'pending') {
+      timeline.push({
+        event: o.status,
+        changed_by: manufacturer?.name || 'System',
+        timestamp: o.updated_at?.toISOString?.() || '',
+      });
+    }
+
+    return {
+      id: o.id,
+      type: 'order' as const,
+      status: o.status || '',
+      created_at: o.created_at?.toISOString?.() || '',
+      updated_at: o.updated_at?.toISOString?.() || '',
+      product_id: o.product_id,
+      quantity: o.quantity,
+      product_name: product?.name || '',
+      customer: {
+        id: o.customer_id,
+        name: o.endcustomers?.name || '',
+        company_name: o.endcustomers?.company_name || '',
+        email: o.endcustomers?.email || '',
+        phone: o.endcustomers?.phone || '',
+        state: o.endcustomers?.state || '',
+        district: o.endcustomers?.district || '',
+        city: o.endcustomers?.city || '',
+      },
+      manufacturer: {
+        id: o.manufacturer_id,
+        name: manufacturer?.name || '',
+        company_name: manufacturer?.company_name || '',
+        email: manufacturer?.email || '',
+        phone: manufacturer?.phone || '',
+        state: manufacturer?.state || '',
+        district: manufacturer?.district || '',
+        city: manufacturer?.city || '',
+      },
+      details,
+      timeline,
+    };
+  }
+
   private mapSampleOrderDetail(so: any) {
     return {
       id: so.id,
@@ -424,6 +599,118 @@ export class OrdersService {
       data: { manufacturer_id: manufacturerId },
     });
     return { success: true };
+  }
+
+  async getCoalOrders(query: OrderQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {};
+    if (query.status && query.status !== 'ALL') {
+      where.order_status = query.status;
+    }
+    if (query.search) {
+      where.OR = [
+        { manufacturers: { name: { contains: query.search, mode: 'insensitive' } } },
+        { coal_providers: { name: { contains: query.search, mode: 'insensitive' } } },
+        { coal_type: { contains: query.search, mode: 'insensitive' } },
+        { order_number: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prisma.manufacturer_coal_orders.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { created_at: 'desc' },
+        include: {
+          manufacturers: { select: { name: true } },
+          coal_providers: { select: { name: true } },
+        },
+      }),
+      this.prisma.manufacturer_coal_orders.count({ where }),
+    ]);
+
+    const data = rows.map((r) => ({
+      id: r.id,
+      orderNumber: r.order_number,
+      manufacturerId: r.manufacturer_id,
+      manufacturerName: r.manufacturers?.name || '',
+      coalProviderId: r.coal_provider_id,
+      coalProviderName: r.coal_providers?.name || '',
+      coalType: r.coal_type,
+      quantity: r.quantity,
+      unit: r.unit,
+      pricePerUnit: Number(r.price_per_unit),
+      totalAmount: Number(r.total_amount),
+      deliveryLocation: r.delivery_location,
+      orderStatus: r.order_status || 'confirmed',
+      paymentStatus: r.payment_status || 'pending',
+      createdAt: r.created_at?.toISOString() || '',
+    }));
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async getTransportOrders(query: OrderQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {};
+    if (query.status && query.status !== 'ALL') {
+      where.order_status = query.status;
+    }
+    if (query.search) {
+      where.OR = [
+        { manufacturers: { name: { contains: query.search, mode: 'insensitive' } } },
+        { transport_providers: { name: { contains: query.search, mode: 'insensitive' } } },
+        { transport_type: { contains: query.search, mode: 'insensitive' } },
+        { order_number: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prisma.manufacturer_transport_orders.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { created_at: 'desc' },
+        include: {
+          manufacturers: { select: { name: true } },
+          transport_providers: { select: { name: true } },
+        },
+      }),
+      this.prisma.manufacturer_transport_orders.count({ where }),
+    ]);
+
+    const data = rows.map((r) => ({
+      id: r.id,
+      orderNumber: r.order_number,
+      manufacturerId: r.manufacturer_id,
+      manufacturerName: r.manufacturers?.name || '',
+      transportProviderId: r.transport_provider_id,
+      transportProviderName: r.transport_providers?.name || '',
+      transportType: r.transport_type,
+      vehicleType: r.vehicle_type || '',
+      pickupLocation: r.pickup_location,
+      deliveryLocation: r.delivery_location,
+      totalCost: Number(r.total_cost),
+      orderStatus: r.order_status || 'confirmed',
+      paymentStatus: r.payment_status || 'pending',
+      trackingNumber: r.tracking_number || null,
+      createdAt: r.created_at?.toISOString() || '',
+    }));
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async getManufacturerOptions() {

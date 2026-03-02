@@ -228,7 +228,8 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[250px]">User</TableHead>
+                <TableHead className="w-[180px]">Username</TableHead>
+                <TableHead className="w-[220px]">Contact Details</TableHead>
                 <TableHead className="text-center">Role</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-center">Last Login</TableHead>
@@ -240,18 +241,18 @@ export default function UsersPage() {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                      {user.phone && (
-                        <p className="text-xs text-muted-foreground">
-                          {formatPhone(user.phone)}
-                        </p>
-                      )}
-                    </div>
+                    <p className="font-medium">{user.name}</p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    {user.phone && (
+                      <p className="text-sm text-muted-foreground">
+                        {formatPhone(user.phone)}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={user.role === "super_admin" ? "default" : "secondary"}>
+                    <Badge variant="secondary">
                       {getRoleLabel(user.role, roles)}
                     </Badge>
                   </TableCell>
@@ -307,7 +308,7 @@ export default function UsersPage() {
               ))}
               {users.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No admin users found. Click &quot;Add User&quot; to create one.
                   </TableCell>
                 </TableRow>

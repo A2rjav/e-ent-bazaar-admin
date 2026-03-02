@@ -23,7 +23,7 @@ import type { OrderListItem, OrderType } from "@/lib/types";
 
 function CopyableId({ id, requestType }: { id: string; requestType?: string }) {
   const [copied, setCopied] = useState(false);
-  const truncated = id.length > 8 ? `…${id.slice(-8)}` : id;
+  const truncated = id.length > 8 ? id.slice(-8) : id;
   const typeParam = requestType ? `?type=${requestType}` : '';
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -73,52 +73,81 @@ interface RequestTableProps {
 
 export function RequestTable({ data, orderType }: RequestTableProps) {
   return (
-    <Table className="table-auto w-full">
+    <Table className="w-full text-sm">
       <TableHeader>
-        <TableRow>
-          <TableHead className="whitespace-nowrap w-[1%]">ID</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Manufacturer</TableHead>
-          <TableHead>Product</TableHead>
-          <TableHead className="text-right whitespace-nowrap w-[1%]">Quantity</TableHead>
-          <TableHead className="text-right whitespace-nowrap w-[1%]">Price</TableHead>
+        <TableRow className="border-b">
+          {/* ID — narrow, left */}
+          <TableHead className="w-[110px] whitespace-nowrap pl-4">Order ID</TableHead>
+          {/* Text columns — left, constrained width */}
+          <TableHead className="min-w-[140px] max-w-[180px]">Customer</TableHead>
+          <TableHead className="min-w-[140px] max-w-[180px]">Manufacturer</TableHead>
+          <TableHead className="min-w-[140px] max-w-[200px]">Product</TableHead>
+          {/* Numeric — right */}
+          <TableHead className="w-[90px] text-right whitespace-nowrap">Qty</TableHead>
+          <TableHead className="w-[100px] text-right whitespace-nowrap">Price</TableHead>
           {orderType === "NORMAL" && (
-            <TableHead className="text-right whitespace-nowrap w-[1%]">Total Amount</TableHead>
+            <TableHead className="w-[120px] text-right whitespace-nowrap">Total</TableHead>
           )}
-          <TableHead className="whitespace-nowrap w-[1%]">Status</TableHead>
-          <TableHead className="whitespace-nowrap w-[1%]">Created At</TableHead>
+          {/* Status — center */}
+          <TableHead className="w-[110px] text-center whitespace-nowrap">Status</TableHead>
+          {/* Date — right, compact */}
+          <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Created</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((order) => (
-          <TableRow key={order.id} className="group/id">
-            <TableCell>
+          <TableRow key={order.id} className="group/id hover:bg-muted/40 transition-colors">
+            {/* ID */}
+            <TableCell className="pl-4 py-3 font-mono">
               <CopyableId id={order.id} requestType={order.requestType || (orderType === 'SAMPLE' ? 'sample_order' : 'order')} />
             </TableCell>
-            <TableCell className="text-sm">
-              <span className="line-clamp-2" title={order.customerName || order.customerId}>{order.customerName || order.customerId}</span>
+            {/* Customer */}
+            <TableCell className="py-3 max-w-[180px]">
+              <span
+                className="block truncate font-medium"
+                title={order.customerName || order.customerId}
+              >
+                {order.customerName || order.customerId}
+              </span>
             </TableCell>
-            <TableCell className="text-sm">
-              <span className="line-clamp-2" title={order.manufacturerName || order.manufacturerId}>{order.manufacturerName || order.manufacturerId}</span>
+            {/* Manufacturer */}
+            <TableCell className="py-3 max-w-[180px]">
+              <span
+                className="block truncate text-muted-foreground"
+                title={order.manufacturerName || order.manufacturerId}
+              >
+                {order.manufacturerName || order.manufacturerId}
+              </span>
             </TableCell>
-            <TableCell className="text-sm">
-              <span className="line-clamp-2" title={order.productName || order.productId}>{order.productName || order.productId}</span>
+            {/* Product */}
+            <TableCell className="py-3 max-w-[200px]">
+              <span
+                className="block truncate text-muted-foreground"
+                title={order.productName || order.productId}
+              >
+                {order.productName || order.productId}
+              </span>
             </TableCell>
-            <TableCell className="text-sm text-right whitespace-nowrap">
+            {/* Quantity — right, tabular */}
+            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap">
               {order.quantity.toLocaleString("en-IN")}
             </TableCell>
-            <TableCell className="text-sm text-right whitespace-nowrap">
-              {order.price != null ? formatCurrency(order.price) : "—"}
+            {/* Price — right, tabular */}
+            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+              {order.price != null ? formatCurrency(order.price) : <span className="text-muted-foreground/40">—</span>}
             </TableCell>
+            {/* Total — right, tabular (normal orders only) */}
             {orderType === "NORMAL" && (
-              <TableCell className="text-sm text-right whitespace-nowrap">
-                {order.totalAmount != null ? formatCurrency(order.totalAmount) : "—"}
+              <TableCell className="py-3 text-right tabular-nums whitespace-nowrap font-medium">
+                {order.totalAmount != null ? formatCurrency(order.totalAmount) : <span className="text-muted-foreground/40">—</span>}
               </TableCell>
             )}
-            <TableCell className="whitespace-nowrap">
+            {/* Status — center */}
+            <TableCell className="py-3 text-center">
               <RequestStatusBadge status={order.status} />
             </TableCell>
-            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+            {/* Date — right */}
+            <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
               {formatDate(order.createdAt)}
             </TableCell>
           </TableRow>

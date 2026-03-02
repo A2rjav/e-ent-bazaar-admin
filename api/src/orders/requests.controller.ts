@@ -14,7 +14,7 @@ export class RequestsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.ordersService.findById(id);
+    return this.ordersService.getRequestDetailUnified(id);
   }
 
   @Patch(':id/reassign')

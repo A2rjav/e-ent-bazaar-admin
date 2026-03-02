@@ -318,6 +318,46 @@ export interface ParticipantDetail extends Participant {
   [key: string]: unknown;
 }
 
+// ---------- Coal Orders (manufacturer_coal_orders) ----------
+
+export interface CoalOrderListItem {
+  id: string;
+  orderNumber: string;
+  manufacturerId: string;
+  manufacturerName?: string;
+  coalProviderId: string;
+  coalProviderName?: string;
+  coalType: string;
+  quantity: number;
+  unit: string;
+  pricePerUnit: number;
+  totalAmount: number;
+  deliveryLocation: string;
+  orderStatus: string;
+  paymentStatus: string;
+  createdAt: string;
+}
+
+// ---------- Transport Orders (manufacturer_transport_orders) ----------
+
+export interface TransportOrderListItem {
+  id: string;
+  orderNumber: string;
+  manufacturerId: string;
+  manufacturerName?: string;
+  transportProviderId: string;
+  transportProviderName?: string;
+  transportType: string;
+  vehicleType?: string;
+  pickupLocation: string;
+  deliveryLocation: string;
+  totalCost: number;
+  orderStatus: string;
+  paymentStatus: string;
+  trackingNumber?: string | null;
+  createdAt: string;
+}
+
 // ---------- Products — DB: products ----------
 
 export interface Product {

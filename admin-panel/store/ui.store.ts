@@ -41,7 +41,7 @@ export const useUIStore = create<UIState>((set, get) => ({
       viewAsUser: null,
       isAuthenticated: true,
       isAuthLoading: false,
-      sidebarCollapsed: false,
+      sidebarCollapsed: false, // sidebar open by default
       sidebarOpen: false,
     }),
 

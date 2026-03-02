@@ -1,16 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 
-// Status badge configs use title-case values matching DB text column values
 const requestStatusConfig: Record<
   string,
   { label: string; variant: "default" | "success" | "warning" | "destructive" | "info" | "pending" | "cancelled" | "secondary" }
 > = {
-  Pending: { label: "Pending", variant: "pending" },
-  Approved: { label: "Approved", variant: "info" },
-  Shipped: { label: "Shipped", variant: "warning" },
-  Delivered: { label: "Delivered", variant: "success" },
-  Cancelled: { label: "Cancelled", variant: "cancelled" },
-  Rejected: { label: "Rejected", variant: "destructive" },
+  pending: { label: "Pending", variant: "pending" },
+  processing: { label: "Processing", variant: "info" },
+  approved: { label: "Approved", variant: "info" },
+  shipped: { label: "Shipped", variant: "warning" },
+  in_transit: { label: "In Transit", variant: "warning" },
+  delivered: { label: "Delivered", variant: "success" },
+  completed: { label: "Completed", variant: "success" },
+  confirmed: { label: "Confirmed", variant: "info" },
+  cancelled: { label: "Cancelled", variant: "cancelled" },
+  rejected: { label: "Rejected", variant: "destructive" },
 };
 
 interface RequestStatusBadgeProps {

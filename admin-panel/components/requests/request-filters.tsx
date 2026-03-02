@@ -15,16 +15,19 @@ interface RequestFiltersProps {
   search: string;
   onStatusChange: (status: string) => void;
   onSearchChange: (search: string) => void;
+  customStatuses?: Array<{ value: string; label: string }>;
 }
 
-const statuses: Array<{ value: string; label: string }> = [
-  { value: "ALL", label: "All Status" },
-  { value: "Pending", label: "Pending" },
-  { value: "Approved", label: "Approved" },
-  { value: "Shipped", label: "Shipped" },
-  { value: "Delivered", label: "Delivered" },
-  { value: "Cancelled", label: "Cancelled" },
-  { value: "Rejected", label: "Rejected" },
+const defaultStatuses: Array<{ value: string; label: string }> = [
+  { value: "ALL", label: "Status" },
+  { value: "pending", label: "Pending" },
+  { value: "processing", label: "Processing" },
+  { value: "approved", label: "Approved" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "rejected", label: "Rejected" },
 ];
 
 export function RequestFilters({
@@ -32,7 +35,9 @@ export function RequestFilters({
   search,
   onStatusChange,
   onSearchChange,
+  customStatuses,
 }: RequestFiltersProps) {
+  const statuses = customStatuses || defaultStatuses;
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="relative flex-1 max-w-sm">

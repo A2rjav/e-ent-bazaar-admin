@@ -45,6 +45,29 @@ export class DashboardService {
     const completionRate =
       totalAll > 0 ? Math.round((totalDelivered / totalAll) * 1000) / 10 : 0;
 
+    // Total order value (orders + sample_orders) and avg customer rating for frontend
+    const [orderValueResult, sampleOrderValueResult, avgRatingResult] =
+      await Promise.all([
+        this.prisma.orders.aggregate({
+          _sum: { total_amount: true },
+          where: dateFilter as any,
+        }),
+        this.prisma.sample_orders.aggregate({
+          _sum: { total_amount: true },
+          where: dateFilter as any,
+        }),
+        this.prisma.manufacturer_coal_ratings
+          .aggregate({ _avg: { rating: true } })
+          .catch(() => ({ _avg: { rating: null } })),
+      ]);
+
+    const totalOrderValue =
+      Number(orderValueResult._sum?.total_amount ?? 0) +
+      Number(sampleOrderValueResult._sum?.total_amount ?? 0);
+    const avgCustomerRating = Number(
+      avgRatingResult._avg?.rating ?? 0,
+    );
+
     return {
       totalSampleOrders,
       totalOrders,
@@ -56,6 +79,8 @@ export class DashboardService {
       totalEndcustomers,
       totalCoalProviders,
       totalTransportProviders,
+      totalOrderValue,
+      avgCustomerRating,
     };
   }
 
