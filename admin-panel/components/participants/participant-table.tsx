@@ -8,9 +8,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { formatPhone } from "@/lib/phone";
 import type { Participant } from "@/lib/types";
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, "success" | "secondary" | "pending" | "destructive"> = {
+    active: "success",
+    waitlist: "pending",
+    inactive: "secondary",
+  };
+  const variant = map[status?.toLowerCase()] ?? "secondary";
+  const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : "—";
+  return <Badge variant={variant}>{label}</Badge>;
+}
 
 interface ParticipantTableProps {
   data: Participant[];
@@ -26,8 +38,8 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
           <TableHead className="min-w-[160px] max-w-[200px]">Email</TableHead>
           <TableHead className="w-[140px] whitespace-nowrap">Phone</TableHead>
           <TableHead className="max-w-[120px]">State</TableHead>
-          <TableHead className="max-w-[120px]">District</TableHead>
           <TableHead className="max-w-[110px]">City</TableHead>
+          <TableHead className="w-[100px] text-center whitespace-nowrap">Status</TableHead>
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Joined</TableHead>
         </TableRow>
       </TableHeader>
@@ -57,15 +69,13 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
                 {p.state || "—"}
               </span>
             </TableCell>
-            <TableCell className="py-3 max-w-[120px]">
-              <span className="block truncate text-muted-foreground" title={p.district}>
-                {p.district || "—"}
-              </span>
-            </TableCell>
             <TableCell className="py-3 max-w-[110px]">
               <span className="block truncate text-muted-foreground" title={p.city}>
                 {p.city || "—"}
               </span>
+            </TableCell>
+            <TableCell className="py-3 text-center">
+              <StatusBadge status={p.status} />
             </TableCell>
             <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
               {formatDate(p.createdAt)}

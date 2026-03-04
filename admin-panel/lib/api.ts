@@ -198,10 +198,25 @@ function mapParticipant(d: any): Participant {
     phone: d.phone || '',
     companyName: d.company_name || d.companyName || '',
     state: d.state || '',
-    district: d.district || '',
     city: d.city || '',
-    category: d.category || '',
+    status: d.status || '',
     createdAt: d.created_at || d.createdAt || '',
+  };
+}
+
+function mapAdminUser(d: any): AdminUser {
+  return {
+    id: d.id || '',
+    email: d.email || '',
+    name: d.name || '',
+    phone: d.phone || null,
+    isActive: d.isActive !== undefined ? Boolean(d.isActive) : Boolean(d.is_active),
+    role: d.role || 'admin',
+    createdAt: d.createdAt || d.created_at || '',
+    updatedAt: d.updatedAt || d.updated_at || '',
+    lastLogin: d.lastLogin || d.last_login || null,
+    loginAttempts: Number(d.loginAttempts ?? d.login_attempts ?? 0),
+    blockedUntil: d.blockedUntil || d.blocked_until || null,
   };
 }
 
@@ -773,9 +788,10 @@ export const api = {
   // ==========================================================================
 
   getAdminUsers: async (): Promise<AdminUser[]> => {
-    const raw = await apiFetch<{ data: AdminUser[] } | AdminUser[]>("/api/admin/admin-users");
+    const raw = await apiFetch<{ data: any[] } | any[]>("/api/admin/admin-users");
     // Railway returns { data: [...] }, local backend returns raw array
-    return Array.isArray(raw) ? raw : ((raw as any).data || []);
+    const arr = Array.isArray(raw) ? raw : ((raw as any).data || []);
+    return arr.map(mapAdminUser);
   },
 
   createAdminUser: async (data: {

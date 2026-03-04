@@ -290,9 +290,8 @@ export interface Participant {
   phone: string;                // *.phone
   companyName: string;          // *.company_name
   state: string;                // *.state
-  district: string;             // *.district
   city: string;                 // *.city
-  category: string;             // *.category
+  status: string;               // waitlist | active | inactive
   createdAt: string;            // *.created_at
 }
 
