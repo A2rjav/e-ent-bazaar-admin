@@ -234,48 +234,47 @@ export class OrdersService {
   /**
    * Returns request detail in Railway/unified API shape so the frontend
    * mapRequestDetail() works without frontend changes (details, type, timeline).
+   * Checks all order tables: sample_orders, orders, manufacturer_transport_orders, manufacturer_coal_orders.
    */
   async getRequestDetailUnified(id: string) {
+    // 1. sample_orders
     const sampleOrder = await this.prisma.sample_orders.findUnique({
       where: { id },
-      include: {
-        endcustomers: true,
-        manufacturers: true,
-        products: true,
-      },
+      include: { endcustomers: true, manufacturers: true, products: true },
     });
+    if (sampleOrder) return this.toRailwayRequestShape(sampleOrder, 'sample_order');
 
-    if (sampleOrder) {
-      return this.toRailwayRequestShape(sampleOrder, 'sample_order');
-    }
-
+    // 2. orders
     const order = await this.prisma.orders.findUnique({
       where: { id },
       include: { endcustomers: true },
     });
-
-    if (!order) throw new NotFoundException('Order not found');
-
-    const manufacturer =
-      order.manufacturer_id &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        order.manufacturer_id,
-      )
-        ? await this.prisma.manufacturer.findUnique({
-            where: { id: order.manufacturer_id },
-          })
+    if (order) {
+      const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const manufacturer = order.manufacturer_id && uuidRe.test(order.manufacturer_id)
+        ? await this.prisma.manufacturer.findUnique({ where: { id: order.manufacturer_id } })
         : null;
-    const product =
-      order.product_id &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        order.product_id,
-      )
-        ? await this.prisma.products.findUnique({
-            where: { id: order.product_id },
-          })
+      const product = order.product_id && uuidRe.test(order.product_id)
+        ? await this.prisma.products.findUnique({ where: { id: order.product_id } })
         : null;
+      return this.toRailwayRequestShapeOrder(order, manufacturer, product);
+    }
 
-    return this.toRailwayRequestShapeOrder(order, manufacturer, product);
+    // 3. manufacturer_transport_orders
+    const transportOrder = await this.prisma.manufacturer_transport_orders.findUnique({
+      where: { id },
+      include: { manufacturers: true, transport_providers: true },
+    });
+    if (transportOrder) return this.toRailwayRequestShapeTransportOrder(transportOrder);
+
+    // 4. manufacturer_coal_orders
+    const coalOrder = await this.prisma.manufacturer_coal_orders.findUnique({
+      where: { id },
+      include: { manufacturers: true, coal_providers: true },
+    });
+    if (coalOrder) return this.toRailwayRequestShapeCoalOrder(coalOrder);
+
+    throw new NotFoundException('Order not found');
   }
 
   private toRailwayRequestShape(so: any, type: 'sample_order') {
@@ -402,6 +401,122 @@ export class OrdersService {
         city: manufacturer?.city || '',
       },
       details,
+      timeline,
+    };
+  }
+
+  private toRailwayRequestShapeTransportOrder(o: any) {
+    const timeline = [
+      { event: 'created', changed_by: 'System', timestamp: o.created_at?.toISOString?.() || '' },
+    ];
+    if (o.order_status && o.order_status !== 'confirmed') {
+      timeline.push({
+        event: o.order_status,
+        changed_by: o.transport_providers?.name || 'System',
+        timestamp: o.updated_at?.toISOString?.() || '',
+      });
+    }
+
+    return {
+      id: o.id,
+      type: 'transport_order' as const,
+      status: o.order_status || 'confirmed',
+      created_at: o.created_at?.toISOString?.() || '',
+      updated_at: o.updated_at?.toISOString?.() || '',
+      product_id: o.product_id || '',
+      quantity: 1,
+      product_name: `${o.transport_type}${o.vehicle_type ? ' — ' + o.vehicle_type : ''}`,
+      customer: {
+        id: o.manufacturer_id,
+        name: o.manufacturers?.name || '',
+        company_name: o.manufacturers?.company_name || '',
+        email: o.manufacturers?.email || '',
+        phone: o.manufacturers?.phone || '',
+        state: o.manufacturers?.state || '',
+        district: o.manufacturers?.district || '',
+        city: o.manufacturers?.city || '',
+      },
+      manufacturer: {
+        id: o.transport_provider_id,
+        name: o.transport_providers?.name || '',
+        company_name: o.transport_providers?.company_name || '',
+        email: o.transport_providers?.email || '',
+        phone: o.transport_providers?.phone || '',
+        state: o.transport_providers?.state || '',
+        district: o.transport_providers?.district || '',
+        city: o.transport_providers?.city || '',
+      },
+      details: {
+        product_id: o.product_id || '',
+        quantity: 1,
+        price: Number(o.total_cost),
+        total_amount: Number(o.total_cost),
+        delivery_address: `${o.pickup_location} → ${o.delivery_location}`,
+        contact_number: '',
+        admin_response: null,
+        tracking_number: o.tracking_number || null,
+        product_name: `${o.transport_type}${o.vehicle_type ? ' — ' + o.vehicle_type : ''}`,
+        category: 'Transport',
+        price_unit: null,
+      },
+      timeline,
+    };
+  }
+
+  private toRailwayRequestShapeCoalOrder(o: any) {
+    const timeline = [
+      { event: 'created', changed_by: 'System', timestamp: o.created_at?.toISOString?.() || '' },
+    ];
+    if (o.order_status && o.order_status !== 'confirmed') {
+      timeline.push({
+        event: o.order_status,
+        changed_by: o.coal_providers?.name || 'System',
+        timestamp: o.updated_at?.toISOString?.() || '',
+      });
+    }
+
+    return {
+      id: o.id,
+      type: 'coal_order' as const,
+      status: o.order_status || 'confirmed',
+      created_at: o.created_at?.toISOString?.() || '',
+      updated_at: o.updated_at?.toISOString?.() || '',
+      product_id: o.product_id || '',
+      quantity: o.quantity,
+      product_name: o.coal_type,
+      customer: {
+        id: o.manufacturer_id,
+        name: o.manufacturers?.name || '',
+        company_name: o.manufacturers?.company_name || '',
+        email: o.manufacturers?.email || '',
+        phone: o.manufacturers?.phone || '',
+        state: o.manufacturers?.state || '',
+        district: o.manufacturers?.district || '',
+        city: o.manufacturers?.city || '',
+      },
+      manufacturer: {
+        id: o.coal_provider_id,
+        name: o.coal_providers?.name || '',
+        company_name: o.coal_providers?.company_name || '',
+        email: o.coal_providers?.email || '',
+        phone: o.coal_providers?.phone || '',
+        state: o.coal_providers?.state || '',
+        district: o.coal_providers?.district || '',
+        city: o.coal_providers?.city || '',
+      },
+      details: {
+        product_id: o.product_id || '',
+        quantity: o.quantity,
+        price: Number(o.price_per_unit),
+        total_amount: Number(o.total_amount),
+        delivery_address: o.delivery_location,
+        contact_number: '',
+        admin_response: null,
+        tracking_number: null,
+        product_name: o.coal_type,
+        category: 'Coal',
+        price_unit: `per ${o.unit}`,
+      },
       timeline,
     };
   }

@@ -77,16 +77,16 @@ export function RequestTable({ data, orderType }: RequestTableProps) {
       <TableHeader>
         <TableRow className="border-b">
           {/* ID — narrow, left */}
-          <TableHead className="w-[110px] whitespace-nowrap pl-4">Order ID</TableHead>
+          <TableHead className="w-[110px] whitespace-nowrap pl-4 text-center">Order ID</TableHead>
           {/* Text columns — left, constrained width */}
           <TableHead className="min-w-[140px] max-w-[180px]">Customer</TableHead>
           <TableHead className="min-w-[140px] max-w-[180px]">Manufacturer</TableHead>
           <TableHead className="min-w-[140px] max-w-[200px]">Product</TableHead>
           {/* Numeric — right */}
-          <TableHead className="w-[90px] text-right whitespace-nowrap">Qty</TableHead>
-          <TableHead className="w-[100px] text-right whitespace-nowrap">Price</TableHead>
+          <TableHead className="w-[90px] text-center whitespace-nowrap">Qty</TableHead>
+          <TableHead className="w-[100px] text-center whitespace-nowrap">Price</TableHead>
           {orderType === "NORMAL" && (
-            <TableHead className="w-[120px] text-right whitespace-nowrap">Total</TableHead>
+            <TableHead className="w-[120px] text-center whitespace-nowrap">Total</TableHead>
           )}
           {/* Status — center */}
           <TableHead className="w-[110px] text-center whitespace-nowrap">Status</TableHead>
@@ -98,7 +98,7 @@ export function RequestTable({ data, orderType }: RequestTableProps) {
         {data.map((order) => (
           <TableRow key={order.id} className="group/id hover:bg-muted/40 transition-colors">
             {/* ID */}
-            <TableCell className="pl-4 py-3 font-mono">
+            <TableCell className="pl-4 py-3 font-mono text-center">
               <CopyableId id={order.id} requestType={order.requestType || (orderType === 'SAMPLE' ? 'sample_order' : 'order')} />
             </TableCell>
             {/* Customer */}
@@ -129,16 +129,14 @@ export function RequestTable({ data, orderType }: RequestTableProps) {
               </span>
             </TableCell>
             {/* Quantity — right, tabular */}
-            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap">
+            <TableCell className="py-3 text-center tabular-nums whitespace-nowrap">
               {order.quantity.toLocaleString("en-IN")}
             </TableCell>
-            {/* Price — right, tabular */}
-            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+            <TableCell className="py-3 text-center tabular-nums whitespace-nowrap text-muted-foreground">
               {order.price != null ? formatCurrency(order.price) : <span className="text-muted-foreground/40">—</span>}
             </TableCell>
-            {/* Total — right, tabular (normal orders only) */}
             {orderType === "NORMAL" && (
-              <TableCell className="py-3 text-right tabular-nums whitespace-nowrap font-medium">
+              <TableCell className="py-3 text-center tabular-nums whitespace-nowrap font-medium">
                 {order.totalAmount != null ? formatCurrency(order.totalAmount) : <span className="text-muted-foreground/40">—</span>}
               </TableCell>
             )}

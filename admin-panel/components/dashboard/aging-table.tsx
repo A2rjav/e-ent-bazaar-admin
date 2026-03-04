@@ -41,47 +41,57 @@ export function AgingTable({ data }: AgingTableProps) {
         <CardTitle className="text-base">Aging Orders (Pending)</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
+        <Table className="w-full text-sm">
           <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Manufacturer</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead>Created At</TableHead>
+            <TableRow className="border-b">
+              <TableHead className="w-[110px]">ID</TableHead>
+              <TableHead className="w-[80px]">Source</TableHead>
+              <TableHead className="min-w-[130px] max-w-[160px]">Customer</TableHead>
+              <TableHead className="min-w-[130px] max-w-[160px]">Manufacturer</TableHead>
+              <TableHead className="min-w-[130px] max-w-[180px]">Product</TableHead>
+              <TableHead className="w-[80px]">Age</TableHead>
+              <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
+              <TableRow key={item.id} className="hover:bg-muted/40 transition-colors">
+                <TableCell className="py-3">
                   <Link
                     href={`/requests/${item.id}`}
-                    className="font-medium text-primary hover:underline"
+                    className="font-mono text-xs font-medium text-primary hover:underline"
+                    title={item.id}
                   >
-                    {item.id}
+                    …{item.id.slice(-8)}
                   </Link>
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-3">
                   <Badge variant="secondary" className="text-[10px]">
                     {item.tableName === "sample_orders" ? "Sample" : "Order"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm">{item.customerName}</TableCell>
-                <TableCell className="text-sm">{item.manufacturerName}</TableCell>
-                <TableCell className="text-sm">{item.productName}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={getAgingSeverity(item.hoursInPending)}
-                    className="gap-1"
-                  >
+                <TableCell className="py-3 max-w-[160px]">
+                  <span className="block truncate" title={item.customerName}>
+                    {item.customerName}
+                  </span>
+                </TableCell>
+                <TableCell className="py-3 max-w-[160px]">
+                  <span className="block truncate text-muted-foreground" title={item.manufacturerName}>
+                    {item.manufacturerName}
+                  </span>
+                </TableCell>
+                <TableCell className="py-3 max-w-[180px]">
+                  <span className="block truncate text-muted-foreground" title={item.productName}>
+                    {item.productName}
+                  </span>
+                </TableCell>
+                <TableCell className="py-3">
+                  <Badge variant={getAgingSeverity(item.hoursInPending)} className="gap-1">
                     <Clock className="h-3 w-3" />
                     {formatHours(item.hoursInPending)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
                   {formatDate(item.createdAt)}
                 </TableCell>
               </TableRow>

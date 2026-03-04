@@ -18,41 +18,63 @@ interface ParticipantTableProps {
 
 export function ParticipantTable({ data }: ParticipantTableProps) {
   return (
-    <Table>
+    <Table className="w-full text-sm">
       <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Company Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead className="min-w-[160px]">Phone</TableHead>
-          <TableHead>State</TableHead>
-          <TableHead>District</TableHead>
-          <TableHead>City</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Created At</TableHead>
+        <TableRow className="border-b">
+          <TableHead className="min-w-[130px] max-w-[160px]">Name</TableHead>
+          <TableHead className="min-w-[150px] max-w-[200px]">Company</TableHead>
+          <TableHead className="min-w-[160px] max-w-[200px]">Email</TableHead>
+          <TableHead className="w-[140px] whitespace-nowrap">Phone</TableHead>
+          <TableHead className="max-w-[120px]">State</TableHead>
+          <TableHead className="max-w-[120px]">District</TableHead>
+          <TableHead className="max-w-[110px]">City</TableHead>
+          <TableHead className="max-w-[130px]">Category</TableHead>
+          <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Joined</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.map((participant) => (
-          <TableRow key={participant.id}>
-            <TableCell className="text-sm font-medium">
-              {participant.name}
+        {data.map((p) => (
+          <TableRow key={p.id} className="hover:bg-muted/40 transition-colors">
+            <TableCell className="py-3 max-w-[160px]">
+              <span className="block truncate font-medium" title={p.name}>
+                {p.name}
+              </span>
             </TableCell>
-            <TableCell className="text-sm">
-              {participant.companyName}
+            <TableCell className="py-3 max-w-[200px]">
+              <span className="block truncate text-muted-foreground" title={p.companyName}>
+                {p.companyName || "—"}
+              </span>
             </TableCell>
-            <TableCell className="text-sm">
-              {participant.email}
+            <TableCell className="py-3 max-w-[200px]">
+              <span className="block truncate text-muted-foreground" title={p.email}>
+                {p.email || "—"}
+              </span>
             </TableCell>
-            <TableCell className="text-sm">
-              {formatPhone(participant.phone)}
+            <TableCell className="py-3 whitespace-nowrap">
+              {formatPhone(p.phone) || "—"}
             </TableCell>
-            <TableCell className="text-sm">{participant.state}</TableCell>
-            <TableCell className="text-sm">{participant.district}</TableCell>
-            <TableCell className="text-sm">{participant.city}</TableCell>
-            <TableCell className="text-sm">{participant.category}</TableCell>
-            <TableCell className="text-sm text-muted-foreground">
-              {formatDate(participant.createdAt)}
+            <TableCell className="py-3 max-w-[120px]">
+              <span className="block truncate" title={p.state}>
+                {p.state || "—"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 max-w-[120px]">
+              <span className="block truncate text-muted-foreground" title={p.district}>
+                {p.district || "—"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 max-w-[110px]">
+              <span className="block truncate text-muted-foreground" title={p.city}>
+                {p.city || "—"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 max-w-[130px]">
+              <span className="block truncate text-muted-foreground" title={p.category}>
+                {p.category || "—"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
+              {formatDate(p.createdAt)}
             </TableCell>
           </TableRow>
         ))}

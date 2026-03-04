@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -37,12 +38,16 @@ function CopyableId({ id }: { id: string }) {
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="group/copy inline-flex items-center gap-1 cursor-default font-mono text-xs">
-            <span className="text-muted-foreground">…</span>
-            {truncated}
+          <span className="inline-flex items-center gap-1.5">
+            <Link
+              href={`/requests/${id}?type=transport_order`}
+              className="font-medium text-primary hover:underline font-mono"
+            >
+              {truncated}
+            </Link>
             <button
               onClick={handleCopy}
-              className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+              className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
               aria-label="Copy ID"
             >
               {copied ? (
@@ -85,7 +90,7 @@ export function TransportOrderTable({ data }: TransportOrderTableProps) {
           <TableHead className="min-w-[140px] max-w-[180px]">Transport Provider</TableHead>
           <TableHead className="w-[120px]">Type</TableHead>
           <TableHead className="min-w-[200px]">Route</TableHead>
-          <TableHead className="w-[120px] text-right whitespace-nowrap">Total Cost</TableHead>
+          <TableHead className="w-[120px] text-center whitespace-nowrap">Total Cost</TableHead>
           <TableHead className="w-[110px] text-center whitespace-nowrap">Payment</TableHead>
           <TableHead className="w-[110px] text-center whitespace-nowrap">Status</TableHead>
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Date</TableHead>
@@ -93,7 +98,7 @@ export function TransportOrderTable({ data }: TransportOrderTableProps) {
       </TableHeader>
       <TableBody>
         {data.map((order) => (
-          <TableRow key={order.id} className="hover:bg-muted/40 transition-colors">
+          <TableRow key={order.id} className="group/id hover:bg-muted/40 transition-colors">
             <TableCell className="pl-4 py-3 font-mono">
               <CopyableId id={order.id} />
             </TableCell>
@@ -126,7 +131,7 @@ export function TransportOrderTable({ data }: TransportOrderTableProps) {
                 </span>
               </div>
             </TableCell>
-            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap font-medium">
+            <TableCell className="py-3 text-center tabular-nums whitespace-nowrap font-medium">
               {formatCurrency(order.totalCost)}
             </TableCell>
             <TableCell className="py-3 text-center">

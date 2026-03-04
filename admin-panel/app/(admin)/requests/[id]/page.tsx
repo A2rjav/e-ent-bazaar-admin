@@ -13,7 +13,9 @@ import { StatusTimeline } from "@/components/requests/status-timeline";
 import { DetailSkeleton } from "@/components/ui/loading-skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 
-function getBackLink(orderType?: string): string {
+function getBackLink(orderType?: string, requestType?: string): string {
+  if (requestType === "transport_order") return "/requests/transport-orders";
+  if (requestType === "coal_order") return "/requests/coal-orders";
   if (orderType === "SAMPLE") return "/requests/sample-orders";
   return "/requests/orders";
 }
@@ -65,7 +67,7 @@ export default function OrderDetailPage() {
     );
   }
 
-  const backLink = getBackLink(order.orderType);
+  const backLink = getBackLink(order.orderType, order.requestType);
 
   const handleCopyId = async () => {
     await navigator.clipboard.writeText(order.id);

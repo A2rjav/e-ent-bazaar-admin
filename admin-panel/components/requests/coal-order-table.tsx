@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -37,12 +38,16 @@ function CopyableId({ id }: { id: string }) {
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="group/copy inline-flex items-center gap-1 cursor-default font-mono text-xs">
-            <span className="text-muted-foreground">…</span>
-            {truncated}
+          <span className="inline-flex items-center gap-1.5">
+            <Link
+              href={`/requests/${id}?type=coal_order`}
+              className="font-medium text-primary hover:underline font-mono"
+            >
+              {truncated}
+            </Link>
             <button
               onClick={handleCopy}
-              className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+              className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
               aria-label="Copy ID"
             >
               {copied ? (
@@ -84,8 +89,8 @@ export function CoalOrderTable({ data }: CoalOrderTableProps) {
           <TableHead className="min-w-[140px] max-w-[180px]">Manufacturer</TableHead>
           <TableHead className="min-w-[140px] max-w-[180px]">Coal Provider</TableHead>
           <TableHead className="min-w-[120px]">Coal Type</TableHead>
-          <TableHead className="w-[110px] text-right whitespace-nowrap">Qty</TableHead>
-          <TableHead className="w-[120px] text-right whitespace-nowrap">Total Amount</TableHead>
+          <TableHead className="w-[110px] text-center whitespace-nowrap">Qty</TableHead>
+          <TableHead className="w-[120px] text-center whitespace-nowrap">Total Amount</TableHead>
           <TableHead className="w-[110px] text-center whitespace-nowrap">Payment</TableHead>
           <TableHead className="w-[110px] text-center whitespace-nowrap">Status</TableHead>
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Date</TableHead>
@@ -93,7 +98,7 @@ export function CoalOrderTable({ data }: CoalOrderTableProps) {
       </TableHeader>
       <TableBody>
         {data.map((order) => (
-          <TableRow key={order.id} className="hover:bg-muted/40 transition-colors">
+          <TableRow key={order.id} className="group/id hover:bg-muted/40 transition-colors">
             <TableCell className="pl-4 py-3 font-mono">
               <CopyableId id={order.id} />
             </TableCell>
@@ -107,16 +112,16 @@ export function CoalOrderTable({ data }: CoalOrderTableProps) {
                 {order.coalProviderName || order.coalProviderId}
               </span>
             </TableCell>
-            <TableCell className="py-3">
-              <span className="block truncate text-muted-foreground">
+            <TableCell className="py-3 max-w-[140px]">
+              <span className="block truncate text-muted-foreground" title={order.coalType}>
                 {order.coalType}
               </span>
             </TableCell>
-            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap">
+            <TableCell className="py-3 text-center tabular-nums whitespace-nowrap">
               {order.quantity.toLocaleString("en-IN")}{" "}
               <span className="text-muted-foreground text-xs">{order.unit}</span>
             </TableCell>
-            <TableCell className="py-3 text-right tabular-nums whitespace-nowrap font-medium">
+            <TableCell className="py-3 text-center tabular-nums whitespace-nowrap font-medium">
               {formatCurrency(order.totalAmount)}
             </TableCell>
             <TableCell className="py-3 text-center">

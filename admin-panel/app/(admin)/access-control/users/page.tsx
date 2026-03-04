@@ -225,30 +225,34 @@ export default function UsersPage() {
         </div>
       ) : (
         <div className="rounded-lg border bg-card">
-          <Table>
+          <Table className="w-full text-sm">
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b">
                 <TableHead className="w-[180px]">Username</TableHead>
-                <TableHead className="w-[220px]">Contact Details</TableHead>
+                <TableHead className="min-w-[180px] max-w-[240px]">Contact Details</TableHead>
                 <TableHead className="text-center">Role</TableHead>
                 <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Last Login</TableHead>
+                <TableHead className="text-center whitespace-nowrap">Last Login</TableHead>
                 <TableHead className="text-center">Created</TableHead>
                 <TableHead className="text-right w-[120px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <p className="font-medium">{user.name}</p>
+                <TableRow key={user.id} className="hover:bg-muted/40 transition-colors">
+                  <TableCell className="py-3 max-w-[180px]">
+                    <span className="block truncate font-medium" title={user.name}>
+                      {user.name}
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <TableCell className="py-3 max-w-[240px]">
+                    <span className="block truncate text-muted-foreground" title={user.email}>
+                      {user.email}
+                    </span>
                     {user.phone && (
-                      <p className="text-sm text-muted-foreground">
+                      <span className="block truncate text-muted-foreground" title={user.phone}>
                         {formatPhone(user.phone)}
-                      </p>
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-center">
