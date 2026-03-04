@@ -28,7 +28,6 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
           <TableHead className="max-w-[120px]">State</TableHead>
           <TableHead className="max-w-[120px]">District</TableHead>
           <TableHead className="max-w-[110px]">City</TableHead>
-          <TableHead className="max-w-[130px]">Category</TableHead>
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Joined</TableHead>
         </TableRow>
       </TableHeader>
@@ -66,11 +65,6 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
             <TableCell className="py-3 max-w-[110px]">
               <span className="block truncate text-muted-foreground" title={p.city}>
                 {p.city || "—"}
-              </span>
-            </TableCell>
-            <TableCell className="py-3 max-w-[130px]">
-              <span className="block truncate text-muted-foreground" title={p.category}>
-                {p.category || "—"}
               </span>
             </TableCell>
             <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
