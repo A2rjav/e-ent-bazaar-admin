@@ -20,6 +20,10 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ParticipantType } from "@/lib/types";
 
+const TYPES_WITH_STATUS = new Set([
+  "MANUFACTURER", "ENDCUSTOMER", "LABOUR_CONTRACTOR",
+]);
+
 const STATUS_OPTIONS_BY_TYPE: Record<
   string,
   readonly { value: string; label: string }[]
@@ -47,6 +51,7 @@ export function ParticipantListPage({ type }: ParticipantListPageProps) {
   const [page, setPage] = useState(1);
   const limit = 10;
 
+  const hasStatus = TYPES_WITH_STATUS.has(type);
   const statusOptions =
     STATUS_OPTIONS_BY_TYPE[type] || STATUS_OPTIONS_BY_TYPE.DEFAULT;
 
@@ -91,18 +96,20 @@ export function ParticipantListPage({ type }: ParticipantListPageProps) {
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {hasStatus && (
+              <Select value={statusFilter} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {isLoading ? (
@@ -116,7 +123,7 @@ export function ParticipantListPage({ type }: ParticipantListPageProps) {
             />
           ) : (
             <>
-              <ParticipantTable data={result.data} />
+              <ParticipantTable data={result.data} showStatus={hasStatus} />
               <Pagination
                 page={page}
                 totalPages={result.meta.totalPages}

@@ -28,9 +28,10 @@ function StatusBadge({ status }: { status: string }) {
 
 interface ParticipantTableProps {
   data: Participant[];
+  showStatus?: boolean;
 }
 
-export function ParticipantTable({ data }: ParticipantTableProps) {
+export function ParticipantTable({ data, showStatus = true }: ParticipantTableProps) {
   return (
     <Table className="w-full text-sm">
       <TableHeader>
@@ -41,7 +42,7 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
           <TableHead className="w-[140px] whitespace-nowrap">Phone</TableHead>
           <TableHead className="max-w-[120px]">State</TableHead>
           <TableHead className="max-w-[110px]">City</TableHead>
-          <TableHead className="w-[100px] text-center whitespace-nowrap">Status</TableHead>
+          {showStatus && <TableHead className="w-[100px] text-center whitespace-nowrap">Status</TableHead>}
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Joined</TableHead>
         </TableRow>
       </TableHeader>
@@ -76,9 +77,11 @@ export function ParticipantTable({ data }: ParticipantTableProps) {
                 {p.city || "—"}
               </span>
             </TableCell>
-            <TableCell className="py-3 text-center">
-              <StatusBadge status={p.status} />
-            </TableCell>
+            {showStatus && (
+              <TableCell className="py-3 text-center">
+                <StatusBadge status={p.status} />
+              </TableCell>
+            )}
             <TableCell className="py-3 text-right text-muted-foreground whitespace-nowrap pr-4">
               {formatDate(p.createdAt)}
             </TableCell>
