@@ -263,6 +263,7 @@ function generateParticipants(type: ParticipantType, names: string[]): Participa
     district: districts[idx % districts.length],
     city: cities[idx % cities.length],
     category: categories[type][idx % categories[type].length],
+    status: type === 'MANUFACTURER' ? ['waitlist', 'approved', 'rejected'][idx % 3] : 'active',
     createdAt: new Date(2025, 6 + (idx % 6), 1 + idx).toISOString(),
   }));
 }
