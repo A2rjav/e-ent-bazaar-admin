@@ -30,19 +30,12 @@ const STATUS_OPTIONS_BY_TYPE: Record<
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
   ],
-  ENDCUSTOMER: [
-    { value: "ALL", label: "Status" },
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-  ],
-  LABOUR_CONTRACTOR: [
+  DEFAULT: [
     { value: "ALL", label: "Status" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ],
 };
-
-const TYPES_WITHOUT_STATUS = new Set(["COAL_PROVIDER", "TRANSPORT_PROVIDER"]);
 
 interface ParticipantListPageProps {
   type: ParticipantType;
@@ -54,8 +47,8 @@ export function ParticipantListPage({ type }: ParticipantListPageProps) {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const hasStatusFilter = !TYPES_WITHOUT_STATUS.has(type);
-  const statusOptions = STATUS_OPTIONS_BY_TYPE[type];
+  const statusOptions =
+    STATUS_OPTIONS_BY_TYPE[type] || STATUS_OPTIONS_BY_TYPE.DEFAULT;
 
   const {
     data: result,
@@ -98,20 +91,18 @@ export function ParticipantListPage({ type }: ParticipantListPageProps) {
                 className="pl-9"
               />
             </div>
-            {hasStatusFilter && statusOptions && (
-              <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {isLoading ? (
