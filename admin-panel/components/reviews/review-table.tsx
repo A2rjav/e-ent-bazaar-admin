@@ -34,14 +34,26 @@ export function ReviewTable({ data, onDelete }: ReviewTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const handleDelete = async () => {
     if (!deleteId) return;
     const review = data.find((r) => r.id === deleteId);
     setIsDeleting(true);
-    await api.deleteReview(deleteId, review?.sourceTable);
-    setIsDeleting(false);
-    setDeleteId(null);
-    onDelete();
+    setDeleteError(null);
+    try {
+      await api.deleteReview(deleteId, review?.sourceTable);
+      setDeleteId(null);
+      onDelete();
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete review. This feature may not be available yet."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -128,7 +140,7 @@ export function ReviewTable({ data, onDelete }: ReviewTableProps) {
         </TableBody>
       </Table>
 
-      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <Dialog open={!!deleteId} onOpenChange={() => { setDeleteId(null); setDeleteError(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Review</DialogTitle>
@@ -137,8 +149,13 @@ export function ReviewTable({ data, onDelete }: ReviewTableProps) {
               soft-delete the review and it will no longer be visible to users.
             </DialogDescription>
           </DialogHeader>
+          {deleteError && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+              <p className="text-sm text-destructive">{deleteError}</p>
+            </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)}>
+            <Button variant="outline" onClick={() => { setDeleteId(null); setDeleteError(null); }}>
               Cancel
             </Button>
             <Button

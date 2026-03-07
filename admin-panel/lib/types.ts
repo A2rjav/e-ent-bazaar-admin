@@ -290,6 +290,7 @@ export interface Participant {
   phone: string;                // *.phone
   companyName: string;          // *.company_name
   state: string;                // *.state
+  district: string;             // *.district
   city: string;                 // *.city
   status: string;               // waitlist | active | inactive
   createdAt: string;            // *.created_at
@@ -301,6 +302,7 @@ export interface ParticipantFilters {
   page?: number;
   limit?: number;
   state?: string;
+  status?: string;
   is_verified?: boolean;
   is_active?: boolean;
 }

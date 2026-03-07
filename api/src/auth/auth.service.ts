@@ -89,8 +89,8 @@ export class AuthService {
       data: { used: true },
     });
 
-    // Find the admin
-    const admin = await this.prisma.admin_users.findFirst({
+    // Find the admin — prefer super_admin when multiple users share the same phone
+    const candidates = await this.prisma.admin_users.findMany({
       where: {
         OR: [
           { phone: { equals: phone } },
@@ -98,7 +98,11 @@ export class AuthService {
         ],
         is_active: true,
       },
+      orderBy: { created_at: 'asc' },
     });
+
+    const admin =
+      candidates.find((u) => u.role === 'super_admin') || candidates[0];
 
     if (!admin) {
       throw new NotFoundException('Admin not found');

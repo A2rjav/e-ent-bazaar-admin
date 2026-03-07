@@ -16,8 +16,10 @@ import type { Participant } from "@/lib/types";
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, "success" | "secondary" | "pending" | "destructive"> = {
     active: "success",
+    approved: "success",
     waitlist: "pending",
     inactive: "secondary",
+    rejected: "destructive",
   };
   const variant = map[status?.toLowerCase()] ?? "secondary";
   const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : "—";

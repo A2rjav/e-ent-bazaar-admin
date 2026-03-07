@@ -190,6 +190,27 @@ function mapParticipantPerformance(raw: any): ParticipantPerformance[] {
 }
 
 function mapParticipant(d: any): Participant {
+  const pType = (PARTICIPANT_TYPE_FROM_RAILWAY[d.type] || d.type || '').toUpperCase();
+  let status = '';
+
+  switch (pType) {
+    case 'MANUFACTURER':
+      status = (typeof d.status === 'string' && d.status) ? d.status : 'active';
+      break;
+    case 'ENDCUSTOMER': {
+      const deletedAt = d.deleted_at ?? d.deletedAt;
+      status = deletedAt ? 'inactive' : 'active';
+      break;
+    }
+    case 'LABOUR_CONTRACTOR': {
+      const isActive = d.is_active ?? d.isActive;
+      status = isActive === false ? 'inactive' : 'active';
+      break;
+    }
+    default:
+      status = 'active';
+      break;
+  }
   return {
     id: d.id || '',
     type: (PARTICIPANT_TYPE_FROM_RAILWAY[d.type] || d.type || 'MANUFACTURER') as ParticipantType,
@@ -198,25 +219,10 @@ function mapParticipant(d: any): Participant {
     phone: d.phone || '',
     companyName: d.company_name || d.companyName || '',
     state: d.state || '',
+    district: d.district || '',
     city: d.city || '',
-    status: d.status || '',
+    status,
     createdAt: d.created_at || d.createdAt || '',
-  };
-}
-
-function mapAdminUser(d: any): AdminUser {
-  return {
-    id: d.id || '',
-    email: d.email || '',
-    name: d.name || '',
-    phone: d.phone || null,
-    isActive: d.isActive !== undefined ? Boolean(d.isActive) : Boolean(d.is_active),
-    role: d.role || 'admin',
-    createdAt: d.createdAt || d.created_at || '',
-    updatedAt: d.updatedAt || d.updated_at || '',
-    lastLogin: d.lastLogin || d.last_login || null,
-    loginAttempts: Number(d.loginAttempts ?? d.login_attempts ?? 0),
-    blockedUntil: d.blockedUntil || d.blocked_until || null,
   };
 }
 
@@ -239,7 +245,7 @@ function mapOrderItem(d: any, orderType: 'SAMPLE' | 'NORMAL'): OrderListItem {
     adminId: d.admin_id || d.adminId || null,
     trackingNumber: d.tracking_number || d.trackingNumber || null,
     customerName: d.customer?.name || d.customerName || d.customer_name || undefined,
-    manufacturerName: d.manufacturer?.name || d.manufacturer?.company_name || d.manufacturerName || d.manufacturer_name || undefined,
+    manufacturerName: d.manufacturer?.name || d.manufacturerName || d.manufacturer_name || undefined,
     productName: d.product?.name || d.productName || d.product_name || undefined,
     // Store underlying request type from unified /requests endpoint
     requestType: d.type || undefined,
@@ -310,7 +316,108 @@ function mapRequestDetail(raw: any): OrderDetail {
   } as any;
 }
 
+function mapCoalOrderItem(d: any): CoalOrderListItem {
+  return {
+    id: d.id || '',
+    orderNumber: d.order_number || d.orderNumber || '',
+    manufacturerId: d.manufacturer_id || d.manufacturerId || '',
+    manufacturerName: d.manufacturer?.name || d.manufacturer_name || d.manufacturerName || undefined,
+    coalProviderId: d.coal_provider_id || d.coalProviderId || '',
+    coalProviderName: d.coal_provider?.name || d.coal_provider_name || d.coalProviderName || undefined,
+    coalType: d.coal_type || d.coalType || '',
+    quantity: Number(d.quantity || 0),
+    unit: d.unit || '',
+    pricePerUnit: d.price_per_unit != null ? Number(d.price_per_unit) : (d.pricePerUnit != null ? Number(d.pricePerUnit) : 0),
+    totalAmount: d.total_amount != null ? Number(d.total_amount) : (d.totalAmount != null ? Number(d.totalAmount) : 0),
+    deliveryLocation: d.delivery_location || d.deliveryLocation || '',
+    orderStatus: d.order_status || d.orderStatus || '',
+    paymentStatus: d.payment_status || d.paymentStatus || '',
+    createdAt: d.created_at || d.createdAt || '',
+  };
+}
 
+function mapTransportOrderItem(d: any): TransportOrderListItem {
+  return {
+    id: d.id || '',
+    orderNumber: d.order_number || d.orderNumber || '',
+    manufacturerId: d.manufacturer_id || d.manufacturerId || '',
+    manufacturerName: d.manufacturer?.name || d.manufacturer_name || d.manufacturerName || undefined,
+    transportProviderId: d.transport_provider_id || d.transportProviderId || '',
+    transportProviderName: d.transport_provider?.name || d.transport_provider_name || d.transportProviderName || undefined,
+    transportType: d.transport_type || d.transportType || '',
+    vehicleType: d.vehicle_type || d.vehicleType || undefined,
+    pickupLocation: d.pickup_location || d.pickupLocation || '',
+    deliveryLocation: d.delivery_location || d.deliveryLocation || '',
+    totalCost: d.total_cost != null ? Number(d.total_cost) : (d.totalCost != null ? Number(d.totalCost) : 0),
+    orderStatus: d.order_status || d.orderStatus || '',
+    paymentStatus: d.payment_status || d.paymentStatus || '',
+    trackingNumber: d.tracking_number || d.trackingNumber || null,
+    createdAt: d.created_at || d.createdAt || '',
+  };
+}
+
+function mapAdminUser(raw: any): AdminUser {
+  return {
+    id: (raw.id as string) || '',
+    email: (raw.email as string) || '',
+    name: (raw.name as string) || '',
+    phone: (raw.phone as string) || null,
+    isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : (raw.is_active !== undefined ? Boolean(raw.is_active) : true),
+    role: (raw.role as string) || 'admin',
+    createdAt: (raw.createdAt as string) || (raw.created_at as string) || '',
+    updatedAt: (raw.updatedAt as string) || (raw.updated_at as string) || '',
+    lastLogin: (raw.lastLogin as string) || (raw.last_login as string) || null,
+    loginAttempts: Number(raw.loginAttempts || raw.login_attempts || 0),
+    blockedUntil: (raw.blockedUntil as string) || (raw.blocked_until as string) || null,
+  };
+}
+
+function mapRatingItem(d: any, category: RatingCategory): RatingItem {
+  const reviewerReviewee = getRatingParties(d, category);
+  return {
+    id: d.id || '',
+    rating: Number(d.rating || 0),
+    reviewTitle: d.review_title || d.reviewTitle || null,
+    reviewText: d.review_text || d.reviewText || null,
+    isVerified: Boolean(d.is_verified ?? d.isVerified ?? false),
+    wouldRecommend: Boolean(d.would_work_again ?? d.wouldRecommend ?? false),
+    createdAt: d.created_at || d.createdAt || '',
+    reviewerName: reviewerReviewee.reviewerName,
+    reviewerType: reviewerReviewee.reviewerType,
+    revieweeName: reviewerReviewee.revieweeName,
+    revieweeType: reviewerReviewee.revieweeType,
+    sourceTable: category,
+  };
+}
+
+function getRatingParties(
+  d: any,
+  category: RatingCategory
+): {
+  reviewerName: string;
+  reviewerType: string;
+  revieweeName: string;
+  revieweeType: string;
+} {
+  const mfgName = d.manufacturer_name || d.manufacturerName || '';
+  const provName = d.provider_name || d.providerName || '';
+  const contractorName = d.contractor_name || d.contractorName || '';
+
+  switch (category) {
+    case 'manufacturer-coal':
+      return { reviewerName: mfgName, reviewerType: 'Manufacturer', revieweeName: provName, revieweeType: 'Coal Provider' };
+    case 'manufacturer-transport':
+      return { reviewerName: mfgName, reviewerType: 'Manufacturer', revieweeName: provName, revieweeType: 'Transport Provider' };
+    case 'coal-provider-manufacturer':
+      return { reviewerName: provName, reviewerType: 'Coal Provider', revieweeName: mfgName, revieweeType: 'Manufacturer' };
+    case 'transport-provider-manufacturer':
+      return { reviewerName: provName, reviewerType: 'Transport Provider', revieweeName: mfgName, revieweeType: 'Manufacturer' };
+    case 'labour-contractor':
+      return { reviewerName: mfgName, reviewerType: 'Manufacturer', revieweeName: contractorName, revieweeType: 'Labour Contractor' };
+    default:
+      return { reviewerName: mfgName || provName, reviewerType: 'Unknown', revieweeName: provName || contractorName, revieweeType: 'Unknown' };
+  }
+}
 
 export const api = {
   // ==========================================================================
@@ -557,6 +664,52 @@ export const api = {
   },
 
   // ==========================================================================
+  // COAL ORDERS — Railway: GET /api/admin/coal-orders, /:id
+  // ==========================================================================
+
+  /** GET /api/admin/coal-orders */
+  getCoalOrders: async (
+    filters: OrderFilters = {}
+  ): Promise<PaginatedResponse<CoalOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
+      `/api/admin/coal-orders?${params.toString()}`
+    );
+    return {
+      data: (raw.data || []).map((d: unknown) => mapCoalOrderItem(d)),
+      meta: raw.meta,
+    };
+  },
+
+  /** GET /api/admin/coal-orders/:id */
+  getCoalOrderById: async (id: string): Promise<unknown> => {
+    return apiFetch(`/api/admin/coal-orders/${id}`);
+  },
+
+  // ==========================================================================
+  // TRANSPORT ORDERS — Railway: GET /api/admin/transport-orders, /:id
+  // ==========================================================================
+
+  /** GET /api/admin/transport-orders */
+  getTransportOrders: async (
+    filters: OrderFilters = {}
+  ): Promise<PaginatedResponse<TransportOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
+      `/api/admin/transport-orders?${params.toString()}`
+    );
+    return {
+      data: (raw.data || []).map((d: unknown) => mapTransportOrderItem(d)),
+      meta: raw.meta,
+    };
+  },
+
+  /** GET /api/admin/transport-orders/:id */
+  getTransportOrderById: async (id: string): Promise<unknown> => {
+    return apiFetch(`/api/admin/transport-orders/${id}`);
+  },
+
+  // ==========================================================================
   // UNIFIED REQUESTS — Railway: GET /api/admin/requests, /:id, /:id/history, /:id/reassign
   // ==========================================================================
 
@@ -593,18 +746,46 @@ export const api = {
   getParticipants: async (
     filters: ParticipantFilters
   ): Promise<PaginatedResponse<Participant>> => {
-    // Try with the original type first; if it fails with 400, retry with lowercase (Railway)
     const isRailway = API_BASE.includes('railway.app');
     const typeValue = isRailway
       ? (PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase())
       : filters.type;
-    const adjustedFilters = { ...filters, type: typeValue };
+
+    const { status, ...rest } = filters;
+    const needsClientFilter = isRailway && !!status;
+    const adjustedFilters: Record<string, unknown> = { ...rest, type: typeValue };
+
+    if (needsClientFilter) {
+      adjustedFilters.page = 1;
+      adjustedFilters.limit = 500;
+    }
+
+    if (status && !isRailway) {
+      adjustedFilters.status = status;
+    }
+
     const params = buildParams(adjustedFilters);
     const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
       `/api/admin/participants?${params.toString()}`
     );
+
+    let mapped = (raw.data || []).map((d: unknown) => mapParticipant(d));
+
+    if (needsClientFilter) {
+      mapped = mapped.filter((p) => p.status?.toLowerCase() === status!.toLowerCase());
+      const page = filters.page || 1;
+      const limit = filters.limit || 10;
+      const total = mapped.length;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const paged = mapped.slice((page - 1) * limit, page * limit);
+      return {
+        data: paged,
+        meta: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+      };
+    }
+
     return {
-      data: (raw.data || []).map((d: unknown) => mapParticipant(d)),
+      data: mapped,
       meta: { ...raw.meta, hasNextPage: raw.meta.hasNextPage ?? false, hasPreviousPage: raw.meta.hasPreviousPage ?? false },
     };
   },
@@ -657,38 +838,10 @@ export const api = {
 
   /** GET /api/admin/ratings/:category */
   getRatings: async (category: RatingCategory): Promise<RatingItem[]> => {
-    const res = await apiFetch<ListRatingsResponse>(
+    const res = await apiFetch<{ data: unknown[] }>(
       `/api/admin/ratings/${category}`
     );
-    // Map Railway field names to frontend RatingItem shape
-    return (res.data || []).map((d: any): RatingItem => {
-      // Determine reviewer/reviewee based on category convention:
-      // manufacturer-* → manufacturer is reviewer, provider is reviewee
-      // *-manufacturer → provider is reviewer, manufacturer is reviewee
-      const manufacturerReviews = category.startsWith('manufacturer');
-      const reviewerName = manufacturerReviews
-        ? (d.manufacturer_name || d.reviewer_name || '')
-        : (d.provider_name || d.coal_provider_name || d.contractor_name || d.reviewer_name || '');
-      const revieweeName = manufacturerReviews
-        ? (d.provider_name || d.coal_provider_name || d.reviewee_name || '')
-        : (d.manufacturer_name || d.reviewee_name || '');
-      const reviewerType = manufacturerReviews ? 'Manufacturer' : category.replace('-manufacturer', '').replace(/-/g, ' ');
-      const revieweeType = manufacturerReviews ? category.replace('manufacturer-', '').replace(/-/g, ' ') : 'Manufacturer';
-      return {
-        id: d.id || '',
-        rating: Number(d.rating || 0),
-        reviewTitle: d.review_title || null,
-        reviewText: d.review_text || null,
-        isVerified: d.is_verified || false,
-        wouldRecommend: d.would_work_again || d.would_recommend || false,
-        createdAt: d.created_at || '',
-        reviewerName,
-        reviewerType,
-        revieweeName,
-        revieweeType,
-        sourceTable: category,
-      };
-    });
+    return (res.data || []).map((d: unknown) => mapRatingItem(d, category));
   },
 
   /** Convenience: fetch all 5 rating categories */
@@ -722,76 +875,13 @@ export const api = {
   },
 
   // ==========================================================================
-  // TRANSPORT ORDERS — Railway: GET /api/admin/transport-orders
-  // ==========================================================================
-
-  getTransportOrders: async (
-    filters: { status?: string; search?: string; page?: number; limit?: number } = {}
-  ): Promise<PaginatedResponse<TransportOrderListItem>> => {
-    const params = buildParams(filters);
-    const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
-      `/api/admin/transport-orders?${params.toString()}`
-    );
-    const data = (raw.data || []).map((d: any): TransportOrderListItem => ({
-      id: d.id || '',
-      orderNumber: d.order_number || '',
-      manufacturerId: d.manufacturer_id || '',
-      manufacturerName: d.manufacturer?.name || d.manufacturer?.company_name || undefined,
-      transportProviderId: d.transport_provider_id || '',
-      transportProviderName: d.provider?.name || d.provider?.company_name || undefined,
-      transportType: d.transport_type || '',
-      vehicleType: d.vehicle_type || undefined,
-      pickupLocation: d.pickup_location || '',
-      deliveryLocation: d.delivery_location || '',
-      totalCost: Number(d.total_cost || 0),
-      orderStatus: d.order_status || '',
-      paymentStatus: d.payment_status || '',
-      trackingNumber: d.tracking_number || null,
-      createdAt: d.created_at || '',
-    }));
-    return { data, meta: raw.meta };
-  },
-
-  // ==========================================================================
-  // COAL ORDERS — Railway: GET /api/admin/coal-orders
-  // ==========================================================================
-
-  getCoalOrders: async (
-    filters: { status?: string; search?: string; page?: number; limit?: number } = {}
-  ): Promise<PaginatedResponse<CoalOrderListItem>> => {
-    const params = buildParams(filters);
-    const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
-      `/api/admin/coal-orders?${params.toString()}`
-    );
-    const data = (raw.data || []).map((d: any): CoalOrderListItem => ({
-      id: d.id || '',
-      orderNumber: d.order_number || '',
-      manufacturerId: d.manufacturer_id || '',
-      manufacturerName: d.manufacturer?.name || d.manufacturer?.company_name || undefined,
-      coalProviderId: d.coal_provider_id || d.provider_id || '',
-      coalProviderName: d.provider?.name || d.provider?.company_name || undefined,
-      coalType: d.coal_type || '',
-      quantity: Number(d.quantity || 0),
-      unit: d.unit || '',
-      pricePerUnit: Number(d.price_per_unit || d.price || 0),
-      totalAmount: Number(d.total_amount || d.total_cost || 0),
-      deliveryLocation: d.delivery_location || '',
-      orderStatus: d.order_status || d.status || '',
-      paymentStatus: d.payment_status || '',
-      createdAt: d.created_at || '',
-    }));
-    return { data, meta: raw.meta };
-  },
-
-  // ==========================================================================
-  // ADMIN USERS — Railway: GET /api/admin/admin-users
+  // ADMIN USERS — Railway: /api/admin/admin-users
   // ==========================================================================
 
   getAdminUsers: async (): Promise<AdminUser[]> => {
-    const raw = await apiFetch<{ data: any[] } | any[]>("/api/admin/admin-users");
-    // Railway returns { data: [...] }, local backend returns raw array
-    const arr = Array.isArray(raw) ? raw : ((raw as any).data || []);
-    return arr.map(mapAdminUser);
+    const raw = await apiFetch<AdminUser[] | { data: unknown[] }>("/api/admin/admin-users");
+    const arr = Array.isArray(raw) ? raw : (raw.data || []);
+    return arr.map((d: any) => mapAdminUser(d));
   },
 
   createAdminUser: async (data: {
@@ -800,10 +890,11 @@ export const api = {
     phone?: string;
     role?: string;
   }): Promise<AdminUser> => {
-    return apiFetch<AdminUser>("/api/admin/admin-users", {
+    const raw = await apiFetch<any>("/api/admin/admin-users", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    return mapAdminUser(raw);
   },
 
   updateAdminUser: async (
@@ -816,10 +907,11 @@ export const api = {
       is_active?: boolean;
     }
   ): Promise<AdminUser> => {
-    return apiFetch<AdminUser>(`/api/admin/admin-users/${id}`, {
-      method: "PATCH",
+    const raw = await apiFetch<any>(`/api/admin/admin-users/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     });
+    return mapAdminUser(raw);
   },
 
   deleteAdminUser: async (id: string): Promise<{ success: boolean }> => {

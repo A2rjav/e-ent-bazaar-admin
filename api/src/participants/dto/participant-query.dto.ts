@@ -20,6 +20,10 @@ export class ParticipantQueryDto {
   search?: string;
 
   @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @Min(1)
   page?: number = 1;

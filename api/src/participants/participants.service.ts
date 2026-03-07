@@ -13,6 +13,7 @@ export interface ParticipantListItem {
   district: string;
   city: string;
   category: string;
+  status: string;
   createdAt: string;
 }
 
@@ -47,6 +48,18 @@ export class ParticipantsService {
       row.created_at instanceof Date
         ? (row.created_at as Date).toISOString()
         : String(row.created_at ?? '');
+
+    let status = '';
+    if (typeof row.status === 'string') {
+      status = row.status;
+    } else if (row.is_active !== undefined) {
+      status = row.is_active ? 'active' : 'inactive';
+    } else if (row.deleted_at) {
+      status = 'inactive';
+    } else {
+      status = 'active';
+    }
+
     return {
       id: String(row.id),
       type,
@@ -58,6 +71,7 @@ export class ParticipantsService {
       district,
       city,
       category,
+      status,
       createdAt,
     };
   }
@@ -67,22 +81,23 @@ export class ParticipantsService {
     search?: string,
     page = 1,
     limit = 10,
+    status?: string,
   ): Promise<PaginatedParticipants> {
     const skip = (page - 1) * limit;
 
+    const searchOr = (fields: string[]) =>
+      search
+        ? fields.map((f) => ({ [f]: { contains: search, mode: 'insensitive' as const } }))
+        : undefined;
+
     switch (type) {
       case 'MANUFACTURER': {
-        const where = search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { email: { contains: search, mode: 'insensitive' as const } },
-                { company_name: { contains: search, mode: 'insensitive' as const } },
-                { state: { contains: search, mode: 'insensitive' as const } },
-                { city: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : {};
+        const where: Record<string, unknown> = {};
+        if (search) {
+          where.OR = searchOr(['name', 'email', 'company_name', 'state', 'city']);
+        }
+        if (status) where.status = status;
+
         const [data, total] = await Promise.all([
           this.prisma.manufacturer.findMany({
             where,
@@ -99,28 +114,18 @@ export class ParticipantsService {
               type,
             ),
           ),
-          meta: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          },
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
       }
       case 'ENDCUSTOMER': {
-        const where = search
-          ? {
-              deleted_at: null,
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { email: { contains: search, mode: 'insensitive' as const } },
-                { company_name: { contains: search, mode: 'insensitive' as const } },
-                { state: { contains: search, mode: 'insensitive' as const } },
-                { city: { contains: search, mode: 'insensitive' as const } },
-                { phone: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : { deleted_at: null };
+        const where: Record<string, unknown> = {};
+        if (status === 'active') where.deleted_at = null;
+        else if (status === 'inactive') where.deleted_at = { not: null };
+        else where.deleted_at = null;
+        if (search) {
+          where.OR = searchOr(['name', 'email', 'company_name', 'state', 'city', 'phone']);
+        }
+
         const [data, total] = await Promise.all([
           this.prisma.endcustomer.findMany({
             where,
@@ -137,26 +142,14 @@ export class ParticipantsService {
               type,
             ),
           ),
-          meta: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          },
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
       }
       case 'COAL_PROVIDER': {
-        const where = search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { email: { contains: search, mode: 'insensitive' as const } },
-                { company_name: { contains: search, mode: 'insensitive' as const } },
-                { state: { contains: search, mode: 'insensitive' as const } },
-                { city: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : {};
+        const where: Record<string, unknown> = {};
+        if (search) {
+          where.OR = searchOr(['name', 'email', 'company_name', 'state', 'city']);
+        }
         const [data, total] = await Promise.all([
           this.prisma.coalProvider.findMany({
             where,
@@ -173,26 +166,14 @@ export class ParticipantsService {
               type,
             ),
           ),
-          meta: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          },
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
       }
       case 'TRANSPORT_PROVIDER': {
-        const where = search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { email: { contains: search, mode: 'insensitive' as const } },
-                { company_name: { contains: search, mode: 'insensitive' as const } },
-                { state: { contains: search, mode: 'insensitive' as const } },
-                { city: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : {};
+        const where: Record<string, unknown> = {};
+        if (search) {
+          where.OR = searchOr(['name', 'email', 'company_name', 'state', 'city']);
+        }
         const [data, total] = await Promise.all([
           this.prisma.transportProvider.findMany({
             where,
@@ -209,26 +190,17 @@ export class ParticipantsService {
               type,
             ),
           ),
-          meta: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          },
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
       }
       case 'LABOUR_CONTRACTOR': {
-        const where = search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { email: { contains: search, mode: 'insensitive' as const } },
-                { company_name: { contains: search, mode: 'insensitive' as const } },
-                { state: { contains: search, mode: 'insensitive' as const } },
-                { city: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : {};
+        const where: Record<string, unknown> = {};
+        if (search) {
+          where.OR = searchOr(['name', 'email', 'company_name', 'state', 'city']);
+        }
+        if (status === 'active') where.is_active = true;
+        else if (status === 'inactive') where.is_active = false;
+
         const [data, total] = await Promise.all([
           this.prisma.labourContractor.findMany({
             where,
@@ -245,12 +217,7 @@ export class ParticipantsService {
               type,
             ),
           ),
-          meta: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          },
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
       }
       default: {

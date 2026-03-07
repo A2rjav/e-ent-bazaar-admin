@@ -19,8 +19,8 @@ export class ParticipantsController {
   async list(
     @Query(new ValidationPipe({ transform: true })) query: ParticipantQueryDto,
   ): Promise<PaginatedParticipants> {
-    const { type, search, page = 1, limit = 10 } = query;
-    return this.participantsService.findAll(type, search, page, limit);
+    const { type, search, page = 1, limit = 10, status } = query;
+    return this.participantsService.findAll(type, search, page, limit, status);
   }
 
   @Patch(':type/:id/activate')
