@@ -542,6 +542,19 @@ export const api = {
     return mapOverview(raw);
   },
 
+  /** GET /api/admin/dashboard/participants */
+  getDashboardParticipants: async (): Promise<Record<string, number>> => {
+    const raw = await apiFetch<Record<string, unknown>>("/api/admin/dashboard/participants");
+    return {
+      totalManufacturers: Number(raw.total_manufacturers || 0),
+      totalEndcustomers: Number(raw.total_endcustomers || 0),
+      totalCoalProviders: Number(raw.total_coal_providers || 0),
+      totalTransportProviders: Number(raw.total_transport_providers || 0),
+      totalLabourContractors: Number(raw.total_labour_contractors || 0),
+      total: Number(raw.total || 0),
+    };
+  },
+
   /** GET /api/admin/dashboard/requests-by-status */
   getDashboardStatusCounts: async (): Promise<StatusCount[]> => {
     const raw = await apiFetch<unknown>("/api/admin/dashboard/requests-by-status");
@@ -555,15 +568,17 @@ export const api = {
   },
 
   /**
-   * Composite dashboard fetch — calls 3 Railway sub-endpoints in parallel.
+   * Composite dashboard fetch — calls 4 Railway sub-endpoints in parallel.
    */
   getDashboardSummary: async (): Promise<DashboardData> => {
-    const [summary, statusCounts, regionDemand] =
+    const [summary, participants, statusCounts, regionDemand] =
       await Promise.all([
         api.getDashboardOverview(),
+        api.getDashboardParticipants(),
         api.getDashboardStatusCounts(),
         api.getDashboardRegionalTrends(),
       ]);
+    Object.assign(summary, participants);
     return { summary, statusCounts, regionDemand };
   },
 
@@ -716,7 +731,7 @@ export const api = {
   // PARTICIPANTS — Railway: GET /api/admin/participants, /:id, /:id/activate, /:id/deactivate, /:id/performance
   // ==========================================================================
 
-  /** GET /api/admin/participants  Query: page, limit, type, state, is_verified, is_active */
+  /** GET /api/admin/participants  Query: page, limit, type, state, district, is_verified, is_active */
   getParticipants: async (
     filters: ParticipantFilters
   ): Promise<PaginatedResponse<Participant>> => {
@@ -725,9 +740,13 @@ export const api = {
       ? (PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase())
       : filters.type;
 
-    const { status, ...rest } = filters;
-    const needsClientFilter = isRailway && !!status;
+    const { status, search, ...rest } = filters;
+    const needsClientFilter = isRailway && (!!status || !!search);
     const adjustedFilters: Record<string, unknown> = { ...rest, type: typeValue };
+
+    if (isRailway) {
+      delete adjustedFilters.search;
+    }
 
     if (needsClientFilter) {
       adjustedFilters.page = 1;
@@ -736,6 +755,9 @@ export const api = {
 
     if (status && !isRailway) {
       adjustedFilters.status = status;
+    }
+    if (search && !isRailway) {
+      adjustedFilters.search = search;
     }
 
     const params = buildParams(adjustedFilters);
@@ -746,7 +768,19 @@ export const api = {
     let mapped = (raw.data || []).map((d: unknown) => mapParticipant(d));
 
     if (needsClientFilter) {
-      mapped = mapped.filter((p) => p.status?.toLowerCase() === status!.toLowerCase());
+      if (status) {
+        mapped = mapped.filter((p) => p.status?.toLowerCase() === status.toLowerCase());
+      }
+      if (search) {
+        const q = search.toLowerCase();
+        mapped = mapped.filter((p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.id.toLowerCase().includes(q) ||
+          p.companyName.toLowerCase().includes(q) ||
+          p.email.toLowerCase().includes(q) ||
+          p.phone.includes(q)
+        );
+      }
       const page = filters.page || 1;
       const limit = filters.limit || 10;
       const total = mapped.length;

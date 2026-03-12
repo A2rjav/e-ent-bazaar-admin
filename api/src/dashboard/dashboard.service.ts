@@ -175,42 +175,26 @@ export class DashboardService {
   }
 
   // ---------------------------------------------------------------------------
-  // GET /api/admin/dashboard/participant-performance
+  // GET /api/admin/dashboard/participants
   // ---------------------------------------------------------------------------
-  async getParticipantPerformance(type?: string, metric?: string, limit = 5) {
-    // Default to manufacturer performance by orders
-    const participantType = type || 'manufacturer';
-    const safeLimit = Math.min(Math.max(limit || 5, 1), 50);
+  async getParticipantsCount() {
+    const [manufacturers, endcustomers, coalProviders, transportProviders, labourContractors] =
+      await Promise.all([
+        this.prisma.manufacturer.count(),
+        this.prisma.endcustomer.count(),
+        this.prisma.coalProvider.count(),
+        this.prisma.transportProvider.count(),
+        this.prisma.labourContractor.count(),
+      ]);
 
-    if (participantType === 'manufacturer') {
-      const manufacturers = await this.prisma.manufacturer.findMany({
-        take: safeLimit,
-        orderBy: { created_at: 'desc' },
-        select: {
-          id: true,
-          name: true,
-          company_name: true,
-          state: true,
-          _count: {
-            select: {
-              sample_orders: true,
-              quotations: true,
-            },
-          },
-        },
-      });
-
-      return manufacturers.map((m) => ({
-        id: m.id,
-        name: m.name || m.company_name || 'Unknown',
-        type: 'manufacturer',
-        totalOrders: m._count.sample_orders + m._count.quotations,
-        state: m.state,
-      }));
-    }
-
-    // Fallback: empty
-    return [];
+    return {
+      total_manufacturers: manufacturers,
+      total_endcustomers: endcustomers,
+      total_coal_providers: coalProviders,
+      total_transport_providers: transportProviders,
+      total_labour_contractors: labourContractors,
+      total: manufacturers + endcustomers + coalProviders + transportProviders + labourContractors,
+    };
   }
 
   // ---------------------------------------------------------------------------

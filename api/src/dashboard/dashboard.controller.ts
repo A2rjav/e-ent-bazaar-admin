@@ -20,6 +20,12 @@ export class DashboardController {
     return this.dashboardService.getOverview(fromDate, toDate);
   }
 
+  /** GET /api/admin/dashboard/participants */
+  @Get('participants')
+  getParticipantsCount() {
+    return this.dashboardService.getParticipantsCount();
+  }
+
   /** GET /api/admin/dashboard/requests-by-status */
   @Get('requests-by-status')
   getRequestsByStatus() {
@@ -30,15 +36,5 @@ export class DashboardController {
   @Get('regional-trends')
   getRegionalTrends() {
     return this.dashboardService.getRegionalTrends();
-  }
-
-  /** GET /api/admin/dashboard/participant-performance */
-  @Get('participant-performance')
-  getParticipantPerformance(
-    @Query('type') type: string,
-    @Query('metric') metric: string,
-    @Query('limit') limit: number,
-  ) {
-    return this.dashboardService.getParticipantPerformance(type, metric, +limit || 5);
   }
 }
