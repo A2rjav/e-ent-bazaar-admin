@@ -152,12 +152,11 @@ export interface AgingRequest {
   createdAt: string;
 }
 
-/** Composite dashboard data (assembled from 4 Railway endpoints) */
+/** Composite dashboard data (assembled from 3 Railway endpoints) */
 export interface DashboardData {
   summary: DashboardOverview;
   statusCounts: StatusCount[];
   regionDemand: RegionDemand[];
-  participantPerformance: ParticipantPerformance[];
 }
 
 // ---------- Unified Order List Item ----------

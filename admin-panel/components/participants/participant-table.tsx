@@ -41,6 +41,7 @@ export function ParticipantTable({ data, showStatus = true }: ParticipantTablePr
           <TableHead className="min-w-[160px] max-w-[200px]">Email</TableHead>
           <TableHead className="w-[140px] whitespace-nowrap">Phone</TableHead>
           <TableHead className="max-w-[120px]">State</TableHead>
+          <TableHead className="max-w-[110px]">District</TableHead>
           <TableHead className="max-w-[110px]">City</TableHead>
           {showStatus && <TableHead className="w-[100px] text-center whitespace-nowrap">Status</TableHead>}
           <TableHead className="w-[110px] text-right whitespace-nowrap pr-4">Joined</TableHead>
@@ -70,6 +71,11 @@ export function ParticipantTable({ data, showStatus = true }: ParticipantTablePr
             <TableCell className="py-3 max-w-[120px]">
               <span className="block truncate" title={p.state}>
                 {p.state || "—"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 max-w-[110px]">
+              <span className="block truncate text-muted-foreground" title={p.district}>
+                {p.district || "—"}
               </span>
             </TableCell>
             <TableCell className="py-3 max-w-[110px]">

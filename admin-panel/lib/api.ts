@@ -4,7 +4,6 @@ import type {
   DashboardOverview,
   StatusCount,
   RegionDemand,
-  ParticipantPerformance,
   OrderListItem,
   OrderDetail,
   OrderParticipant,
@@ -172,20 +171,6 @@ function mapRegionalTrends(raw: any): RegionDemand[] {
     totalOrders: Number(d.total_orders || d.totalOrders || d.total_requests || 0),
     delivered: Number(d.delivered || d.completed || 0),
     pending: Number(d.pending || 0),
-  }));
-}
-
-function mapParticipantPerformance(raw: any): ParticipantPerformance[] {
-  // Railway: { data: [...], metric, type }
-  const arr = Array.isArray(raw) ? raw : (raw.data || []);
-  return arr.map((d: any) => ({
-    id: d.id || '',
-    name: d.name || '',
-    companyName: d.company_name || d.companyName || '',
-    type: d.type || '',
-    totalOrders: Number(d.total_orders || d.totalOrders || 0),
-    completedOrders: Number(d.completed_orders || d.completedOrders || 0),
-    averageRating: Number(d.avg_rating || d.averageRating || 0),
   }));
 }
 
@@ -569,28 +554,17 @@ export const api = {
     return mapRegionalTrends(raw);
   },
 
-  /** GET /api/admin/dashboard/participant-performance */
-  getDashboardParticipantPerformance: async (): Promise<
-    ParticipantPerformance[]
-  > => {
-    const raw = await apiFetch<unknown>(
-      "/api/admin/dashboard/participant-performance"
-    );
-    return mapParticipantPerformance(raw);
-  },
-
   /**
-   * Composite dashboard fetch — calls 4 Railway sub-endpoints in parallel.
+   * Composite dashboard fetch — calls 3 Railway sub-endpoints in parallel.
    */
   getDashboardSummary: async (): Promise<DashboardData> => {
-    const [summary, statusCounts, regionDemand, participantPerformance] =
+    const [summary, statusCounts, regionDemand] =
       await Promise.all([
         api.getDashboardOverview(),
         api.getDashboardStatusCounts(),
         api.getDashboardRegionalTrends(),
-        api.getDashboardParticipantPerformance(),
       ]);
-    return { summary, statusCounts, regionDemand, participantPerformance };
+    return { summary, statusCounts, regionDemand };
   },
 
   // ==========================================================================
