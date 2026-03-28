@@ -25,8 +25,8 @@ import type {
 } from "./types";
 
 // ============================================================================
-// API Client Layer — aligned with Railway Backend Contract
-// https://e-ent-bazar-backend.up.railway.app/api/docs
+// API Client Layer — aligned with backend Swagger
+// https://dev-api.sainirohit.com/api/docs
 // ============================================================================
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";

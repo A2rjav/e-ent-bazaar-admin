@@ -1,8 +1,8 @@
 // ============================================================
 // e-ENT Bazaar Admin Panel — Frontend Type Definitions
 // ============================================================
-// ALIGNED WITH RAILWAY BACKEND API CONTRACT (Swagger)
-// https://e-ent-bazar-backend.up.railway.app/api/docs
+// ALIGNED WITH BACKEND API CONTRACT (Swagger)
+// https://dev-api.sainirohit.com/api/docs
 // ============================================================
 
 // ---------- Enums / Union types ----------
