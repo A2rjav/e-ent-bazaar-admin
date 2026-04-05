@@ -21,11 +21,13 @@ import type {
   PaginatedResponse,
   PaginationMeta,
   DeactivateParticipantDto,
+  CoalOrderListItem,
+  TransportOrderListItem,
 } from "./types";
 
 // ============================================================================
-// API Client Layer — aligned with Railway Backend Contract
-// https://e-ent-bazar-backend.up.railway.app/api/docs
+// API Client Layer — aligned with Backend Contract
+// https://dev-api.sainirohit.com/api/docs
 // ============================================================================
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -187,6 +189,94 @@ function mapParticipantPerformance(raw: any): ParticipantPerformance[] {
   }));
 }
 
+function mapRatingItem(d: any, category: string): RatingItem {
+  // Determine reviewer/reviewee based on category direction
+  const isManufacturerReviewer = category.startsWith('manufacturer-');
+  let reviewerName = '';
+  let revieweeName = '';
+  if (category === 'labour-contractor') {
+    reviewerName = d.manufacturer_name || d.contractor_name || '';
+    revieweeName = d.contractor_name || d.manufacturer_name || '';
+  } else if (isManufacturerReviewer) {
+    reviewerName = d.manufacturer_name || '';
+    revieweeName = d.provider_name || '';
+  } else {
+    reviewerName = d.provider_name || '';
+    revieweeName = d.manufacturer_name || '';
+  }
+
+  return {
+    id: d.id || '',
+    rating: Number(d.rating || 0),
+    reviewTitle: d.reviewTitle || d.review_title || null,
+    reviewText: d.reviewText || d.review_text || null,
+    isVerified: d.isVerified !== undefined ? Boolean(d.isVerified) : Boolean(d.is_verified),
+    wouldRecommend: d.wouldRecommend !== undefined ? Boolean(d.wouldRecommend) : Boolean(d.would_work_again ?? d.would_recommend),
+    createdAt: d.createdAt || d.created_at || '',
+    reviewerName: d.reviewerName || d.reviewer_name || reviewerName,
+    reviewerType: d.reviewerType || d.reviewer_type || '',
+    revieweeName: d.revieweeName || d.reviewee_name || revieweeName,
+    revieweeType: d.revieweeType || d.reviewee_type || '',
+    sourceTable: d.sourceTable || d.source_table || category,
+  };
+}
+
+function mapCoalOrder(d: any): CoalOrderListItem {
+  return {
+    id: d.id || '',
+    orderNumber: d.orderNumber || d.order_number || '',
+    manufacturerId: d.manufacturer_id || d.manufacturerId || '',
+    manufacturerName: d.manufacturer?.name || d.manufacturer?.company_name || d.manufacturer_name || '',
+    coalProviderId: d.coal_provider_id || d.coalProviderId || '',
+    coalProviderName: d.provider?.name || d.provider?.company_name || d.coal_provider_name || '',
+    coalType: d.coal_type || d.coalType || '',
+    quantity: Number(d.quantity || 0),
+    unit: d.unit || 'MT',
+    pricePerUnit: Number(d.price_per_unit || d.pricePerUnit || 0),
+    totalAmount: Number(d.total_amount || d.totalAmount || d.total_cost || 0),
+    deliveryLocation: d.delivery_location || d.deliveryLocation || '',
+    orderStatus: d.order_status || d.orderStatus || d.status || '',
+    paymentStatus: d.payment_status || d.paymentStatus || '',
+    createdAt: d.created_at || d.createdAt || '',
+  };
+}
+
+function mapTransportOrder(d: any): TransportOrderListItem {
+  return {
+    id: d.id || '',
+    orderNumber: d.orderNumber || d.order_number || '',
+    manufacturerId: d.manufacturer_id || d.manufacturerId || '',
+    manufacturerName: d.manufacturer?.name || d.manufacturer?.company_name || d.manufacturer_name || '',
+    transportProviderId: d.transport_provider_id || d.transportProviderId || '',
+    transportProviderName: d.provider?.name || d.provider?.company_name || d.transport_provider_name || '',
+    transportType: d.transport_type || d.transportType || '',
+    vehicleType: d.vehicle_type || d.vehicleType || undefined,
+    pickupLocation: d.pickup_location || d.pickupLocation || '',
+    deliveryLocation: d.delivery_location || d.deliveryLocation || '',
+    totalCost: Number(d.total_cost || d.totalCost || 0),
+    orderStatus: d.order_status || d.orderStatus || d.status || '',
+    paymentStatus: d.payment_status || d.paymentStatus || '',
+    trackingNumber: d.tracking_number || d.trackingNumber || null,
+    createdAt: d.created_at || d.createdAt || '',
+  };
+}
+
+function mapAdminUser(d: any): AdminUser {
+  return {
+    id: d.id || '',
+    email: d.email || '',
+    name: d.name || '',
+    phone: d.phone || null,
+    isActive: d.isActive !== undefined ? Boolean(d.isActive) : (d.is_active !== undefined ? Boolean(d.is_active) : true),
+    role: d.role || 'admin',
+    createdAt: d.createdAt || d.created_at || '',
+    updatedAt: d.updatedAt || d.updated_at || '',
+    lastLogin: d.lastLogin || d.last_login || null,
+    loginAttempts: Number(d.loginAttempts || d.login_attempts || 0),
+    blockedUntil: d.blockedUntil || d.blocked_until || null,
+  };
+}
+
 function mapParticipant(d: any): Participant {
   return {
     id: d.id || '',
@@ -198,7 +288,7 @@ function mapParticipant(d: any): Participant {
     state: d.state || '',
     district: d.district || '',
     city: d.city || '',
-    category: d.category || '',
+    status: d.status || '',
     createdAt: d.created_at || d.createdAt || '',
   };
 }
@@ -229,11 +319,12 @@ function mapOrderItem(d: any, orderType: 'SAMPLE' | 'NORMAL'): OrderListItem {
   };
 }
 
-/** Map Railway /api/admin/requests/:id?type=... response to OrderDetail */
+/** Map /api/admin/requests/:id?type=... response to OrderDetail */
 function mapRequestDetail(raw: any): OrderDetail {
   const det = raw.details || {};
   const cust = raw.customer || {};
   const mfr = raw.manufacturer || {};
+  const prod = raw.product || {};
 
   function mapParticipantObj(p: any): OrderParticipant {
     return {
@@ -256,7 +347,7 @@ function mapRequestDetail(raw: any): OrderDetail {
     orderType,
     customerId: cust.id || '',
     manufacturerId: mfr.id || '',
-    productId: det.product_id || raw.product_id || '',
+    productId: det.product_id || raw.product_id || prod.id || '',
     quantity: Number(det.quantity || raw.quantity || 0),
     price: det.price != null ? Number(det.price) : null,
     totalAmount: det.total_amount != null ? Number(det.total_amount) : null,
@@ -270,15 +361,15 @@ function mapRequestDetail(raw: any): OrderDetail {
     trackingNumber: det.tracking_number || null,
     customerName: cust.name || '',
     manufacturerName: mfr.name || '',
-    productName: det.product_name || raw.product_name || '',
+    productName: det.product_name || raw.product_name || prod.name || '',
 
     // Resolved nested objects
     customer: mapParticipantObj(cust),
     manufacturer: mapParticipantObj(mfr),
     product: {
-      id: det.product_id || raw.product_id || '',
-      name: det.product_name || raw.product_name || raw.type || '',
-      category: det.category || '',
+      id: det.product_id || raw.product_id || prod.id || '',
+      name: det.product_name || raw.product_name || prod.name || '',
+      category: det.category || prod.category || '',
       price: det.price != null ? Number(det.price) : null,
       priceUnit: det.price_unit || null,
     },
@@ -456,17 +547,16 @@ export const api = {
   },
 
   /**
-   * Composite dashboard fetch — calls 4 Railway sub-endpoints in parallel.
+   * Composite dashboard fetch — calls 3 backend sub-endpoints in parallel.
    */
   getDashboardSummary: async (): Promise<DashboardData> => {
-    const [summary, statusCounts, regionDemand, participantPerformance] =
+    const [summary, statusCounts, regionDemand] =
       await Promise.all([
         api.getDashboardOverview(),
         api.getDashboardStatusCounts(),
         api.getDashboardRegionalTrends(),
-        api.getDashboardParticipantPerformance(),
       ]);
-    return { summary, statusCounts, regionDemand, participantPerformance };
+    return { summary, statusCounts, regionDemand };
   },
 
   // ==========================================================================
@@ -576,11 +666,7 @@ export const api = {
   getParticipants: async (
     filters: ParticipantFilters
   ): Promise<PaginatedResponse<Participant>> => {
-    // Try with the original type first; if it fails with 400, retry with lowercase (Railway)
-    const isRailway = API_BASE.includes('railway.app');
-    const typeValue = isRailway
-      ? (PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase())
-      : filters.type;
+    const typeValue = PARTICIPANT_TYPE_TO_RAILWAY[filters.type] || filters.type?.toLowerCase();
     const adjustedFilters = { ...filters, type: typeValue };
     const params = buildParams(adjustedFilters);
     const raw = await apiFetch<{ data: unknown[]; meta: PaginationMeta }>(
@@ -635,7 +721,41 @@ export const api = {
   },
 
   // ==========================================================================
-  // RATINGS — Railway: 5 GET endpoints under /api/admin/ratings/*
+  // COAL ORDERS
+  // ==========================================================================
+
+  getCoalOrders: async (
+    filters: { status?: string; search?: string; page?: number; limit?: number } = {}
+  ): Promise<PaginatedResponse<CoalOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: any[]; meta: any }>(
+      `/api/admin/coal-orders?${params.toString()}`
+    );
+    return {
+      data: (raw.data || []).map(mapCoalOrder),
+      meta: { ...raw.meta, hasNextPage: raw.meta?.hasNextPage ?? false, hasPreviousPage: raw.meta?.hasPreviousPage ?? false },
+    };
+  },
+
+  // ==========================================================================
+  // TRANSPORT ORDERS
+  // ==========================================================================
+
+  getTransportOrders: async (
+    filters: { status?: string; search?: string; page?: number; limit?: number } = {}
+  ): Promise<PaginatedResponse<TransportOrderListItem>> => {
+    const params = buildParams(filters);
+    const raw = await apiFetch<{ data: any[]; meta: any }>(
+      `/api/admin/transport-orders?${params.toString()}`
+    );
+    return {
+      data: (raw.data || []).map(mapTransportOrder),
+      meta: { ...raw.meta, hasNextPage: raw.meta?.hasNextPage ?? false, hasPreviousPage: raw.meta?.hasPreviousPage ?? false },
+    };
+  },
+
+  // ==========================================================================
+  // RATINGS — 5 GET endpoints under /api/admin/ratings/*
   // ==========================================================================
 
   /** GET /api/admin/ratings/:category */
@@ -643,7 +763,7 @@ export const api = {
     const res = await apiFetch<ListRatingsResponse>(
       `/api/admin/ratings/${category}`
     );
-    return res.data;
+    return (res.data || []).map((d: any) => mapRatingItem(d, category));
   },
 
   /** Convenience: fetch all 5 rating categories */
@@ -681,7 +801,9 @@ export const api = {
   // ==========================================================================
 
   getAdminUsers: async (): Promise<AdminUser[]> => {
-    return apiFetch<AdminUser[]>("/api/admin/users");
+    const res = await apiFetch<{ data: any[] } | any[]>("/api/admin/admin-users");
+    const arr = Array.isArray(res) ? res : (res.data || []);
+    return arr.map(mapAdminUser);
   },
 
   createAdminUser: async (data: {
@@ -690,10 +812,11 @@ export const api = {
     phone?: string;
     role?: string;
   }): Promise<AdminUser> => {
-    return apiFetch<AdminUser>("/api/admin/users", {
+    const raw = await apiFetch<any>("/api/admin/admin-users", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    return mapAdminUser(raw.data || raw);
   },
 
   updateAdminUser: async (
@@ -706,14 +829,15 @@ export const api = {
       is_active?: boolean;
     }
   ): Promise<AdminUser> => {
-    return apiFetch<AdminUser>(`/api/admin/users/${id}`, {
+    const raw = await apiFetch<any>(`/api/admin/admin-users/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
+    return mapAdminUser(raw.data || raw);
   },
 
   deleteAdminUser: async (id: string): Promise<{ success: boolean }> => {
-    return apiFetch<{ success: boolean }>(`/api/admin/users/${id}`, {
+    return apiFetch<{ success: boolean }>(`/api/admin/admin-users/${id}`, {
       method: "DELETE",
     });
   },

@@ -36,11 +36,14 @@ const LABELS: Record<string, string> = {
 };
 
 export function StatusChart({ data }: StatusChartProps) {
-  const chartData = data.map((item) => ({
-    name: LABELS[item.status] || item.status,
-    value: item.count,
-    color: COLORS[item.status] || "#6b7280",
-  }));
+  const chartData = data.map((item) => {
+    const key = item.status.toUpperCase();
+    return {
+      name: LABELS[key] || item.status,
+      value: item.count,
+      color: COLORS[key] || "#6b7280",
+    };
+  });
 
   return (
     <Card>
