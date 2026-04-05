@@ -30,7 +30,8 @@ import type {
 // https://dev-api.sainirohit.com/api/docs
 // ============================================================================
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Use relative URLs — Next.js rewrites proxy /api/* to the backend (avoids CORS).
+const API_BASE = "";
 
 /** Read the stored JWT token (if any). */
 function getAuthToken(): string | null {
