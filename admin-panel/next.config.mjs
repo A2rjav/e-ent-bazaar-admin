@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://api.e-entbazaar.com";
     return [
       {
         source: "/api/:path*",
